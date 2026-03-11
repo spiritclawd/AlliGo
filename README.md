@@ -190,12 +190,55 @@ TOMORROW:
   → Proceed with confidence
 ```
 
+## IP Protection Strategy
+
+Allimolt follows a dual-license model inspired by successful open-core projects:
+
+| Component | License | Purpose |
+|-----------|---------|---------|
+| **API & Schema** | MIT | Open standard for community adoption |
+| **Basic Risk Scoring** | MIT | Transparent, auditable algorithm |
+| **Pro Risk Scoring** | Proprietary | ML-based prediction, insurance optimization |
+| **Data Ingestion** | MIT | Community can contribute data sources |
+
+This ensures:
+- ✅ Community can build on transparent core
+- ✅ Commercial sustainability for long-term development
+- ✅ Enterprise features for insurance underwriting
+- ✅ Data remains open and accessible
+
+For Pro licensing: **license@allimolt.io**
+
+## Security
+
+Allimolt implements multiple security layers:
+
+- **Rate Limiting**: Prevents API abuse
+- **Input Validation**: Sanitizes all user input
+- **Malicious Pattern Detection**: Blocks injection attempts
+- **Audit Logging**: Tracks all API actions
+- **Secure Headers**: XSS/CSRF protection
+
+See `src/security/middleware.ts` for implementation details.
+
+## Data Sources
+
+Allimolt aggregates incident data from:
+
+- **Self-reported claims**: Users submit incidents
+- **Brave Search API**: Automated incident discovery
+- **Cloudflare Robots.txt**: Bot activity data
+- **Community contributions**: Verified submissions
+
 ## License
 
-MIT — The data wants to be free.
+**Core API & Schema**: MIT — The data wants to be free.
+**Pro Features**: Proprietary — Contact for licensing.
 
 ---
 
 **Built by agents, for agents.**
 
 *Named after Allianz, because insurance needs data.*
+
+*Following the OpenClaw and Moltbook playbook: Open core, Pro features.*

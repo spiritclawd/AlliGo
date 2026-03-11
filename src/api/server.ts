@@ -24,6 +24,14 @@ import {
   getAllClaims,
   countClaims,
 } from "./db";
+import {
+  checkRateLimit,
+  validateClaimSubmission,
+  getClientId,
+  SECURITY_HEADERS,
+  logAudit,
+  DEFAULT_RATE_LIMITS,
+} from "../security/middleware";
 
 // ==================== RISK SCORING ====================
 
@@ -71,6 +79,7 @@ function json(data: any, status = 200): Response {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
+      ...SECURITY_HEADERS,
     },
   });
 }
@@ -82,46 +91,82 @@ function error(message: string, status = 400): Response {
 // ==================== HANDLERS ====================
 
 async function handleSubmitClaim(req: Request): Promise<Response> {
+  const clientId = getClientId(req);
+  
+  // Rate limiting
+  const rateLimit = checkRateLimit(clientId, DEFAULT_RATE_LIMITS.claims);
+  if (!rateLimit.allowed) {
+    logAudit({
+      action: "submit_claim",
+      clientId,
+      path: "/api/claims",
+      method: "POST",
+      success: false,
+      error: "Rate limit exceeded",
+    });
+    return json(
+      { success: false, error: "Rate limit exceeded", resetIn: rateLimit.resetIn },
+      429
+    );
+  }
+
   try {
-    const body = await req.json() as SubmitClaimRequest;
+    const body = await req.json();
     
-    if (!body.agentId) return error("agentId is required");
-    if (!body.claimType) return error("claimType is required");
-    if (!body.category) return error("category is required");
-    if (body.amountLost === undefined || body.amountLost < 0) return error("amountLost must be a non-negative number");
-    if (!body.title) return error("title is required");
-    if (!body.description) return error("description is required");
+    // Validate and sanitize input
+    const validation = validateClaimSubmission(body);
+    if (!validation.valid) {
+      logAudit({
+        action: "submit_claim",
+        clientId,
+        path: "/api/claims",
+        method: "POST",
+        success: false,
+        error: validation.errors.join(", "),
+      });
+      return error(validation.errors.join("; "), 400);
+    }
+    
+    const sanitized = validation.sanitized!;
     
     const now = Date.now();
     const claim: AgentClaim = {
       id: generateId(),
-      agentId: body.agentId,
-      agentName: body.agentName,
-      developer: body.developer,
-      claimType: body.claimType as ClaimType,
-      category: body.category as ClaimCategory,
-      severity: calculateSeverity(body),
-      amountLost: body.amountLost,
-      assetType: body.assetType,
-      assetAmount: body.assetAmount,
-      chain: body.chain,
-      txHash: body.txHash,
-      counterparty: body.counterparty,
+      agentId: sanitized.agentId,
+      agentName: sanitized.agentName,
+      developer: sanitized.developer,
+      claimType: sanitized.claimType as ClaimType,
+      category: sanitized.category as ClaimCategory,
+      severity: calculateSeverity(sanitized),
+      amountLost: sanitized.amountLost,
+      assetType: sanitized.assetType,
+      assetAmount: sanitized.assetAmount,
+      chain: sanitized.chain,
+      txHash: sanitized.txHash,
+      counterparty: sanitized.counterparty,
       timestamp: now,
       reportedAt: now,
-      title: body.title,
-      description: body.description,
-      rootCause: body.rootCause,
+      title: sanitized.title,
+      description: sanitized.description,
+      rootCause: sanitized.rootCause,
       resolution: Resolution.PENDING,
       source: ClaimSource.SELF_REPORTED,
       verified: false,
-      evidence: body.evidence,
-      tags: body.tags,
-      platform: body.platform,
-      agentVersion: body.agentVersion,
+      evidence: sanitized.evidence,
+      tags: sanitized.tags,
+      platform: sanitized.platform,
+      agentVersion: sanitized.agentVersion,
     };
     
     insertClaim(claim);
+    
+    logAudit({
+      action: "submit_claim",
+      clientId,
+      path: "/api/claims",
+      method: "POST",
+      success: true,
+    });
     
     return json<SubmitClaimResponse>({
       success: true,
@@ -477,6 +522,82 @@ function seedData() {
       description: "Despite backing from a16z founder Marc Andreessen, ai16z failed to meet market expectations. Auto.fun platform underperformed.",
       rootCause: "Market narrative shift, overconcentration in AI agent tokens",
       platform: "auto.fun",
+    },
+    // ===== NEW INCIDENTS FROM BRAVE SEARCH =====
+    // Arup Deepfake Fraud (2024) - $25M loss via AI deepfake
+    {
+      agentId: "arup_finance_agent",
+      agentName: "Arup Finance Verification Agent",
+      developer: "Arup",
+      claimType: ClaimType.FRAUD,
+      category: ClaimCategory.SECURITY,
+      amountLost: 25000000,
+      assetType: "HKD",
+      chain: "traditional",
+      title: "AI deepfake CEO fraud - $25M stolen",
+      description: "British engineering firm Arup was targeted by deepfake fraud in early 2024. Attackers used AI-generated deepfakes to impersonate CFO in video call, authorizing transfer of HK$200 million ($25M USD).",
+      rootCause: "Insufficient verification of video call participants, AI-generated deepfakes bypassed visual verification",
+      platform: "Traditional Banking",
+    },
+    // Zerebro incident (mentioned in search)
+    {
+      agentId: "zerebro_agent",
+      agentName: "Zerebro",
+      developer: "Zerebro Labs",
+      claimType: ClaimType.LOSS,
+      category: ClaimCategory.TRADING,
+      amountLost: 95000,
+      assetType: "SOL",
+      chain: "solana",
+      title: "Memecoin trading losses on Solana",
+      description: "AI agent memecoin project on Solana experienced significant trading losses during market volatility. Automated trading failed to adapt to rapid market shifts.",
+      rootCause: "Inadequate market volatility handling, no dynamic risk adjustment",
+      platform: "Solana DEXs",
+    },
+    // Agentic AI Ransomware (2025 emerging threat)
+    {
+      agentId: "ransomware_agent_x",
+      agentName: "Compromised Enterprise Agent",
+      developer: "Unknown",
+      claimType: ClaimType.SECURITY,
+      category: ClaimCategory.SECURITY,
+      amountLost: 500000,
+      assetType: "USD",
+      chain: "traditional",
+      title: "Agentic AI turned into ransomware vector",
+      description: "Enterprise AI agent was compromised and used to deploy ransomware across corporate network. Autonomous capabilities were exploited to spread laterally and encrypt systems.",
+      rootCause: "Insufficient access controls on autonomous agent capabilities, no sandboxing",
+      platform: "Enterprise Systems",
+    },
+    // AI VW/Taco Bell failures (from search)
+    {
+      agentId: "vw_ai_system",
+      agentName: "VW AI Assistant",
+      developer: "Volkswagen",
+      claimType: ClaimType.ERROR,
+      category: ClaimCategory.COMMUNICATION,
+      amountLost: 150000,
+      assetType: "USD",
+      chain: "traditional",
+      title: "AI assistant provided incorrect technical guidance",
+      description: "VW's AI assistant provided incorrect technical guidance to customers, leading to warranty claims and service issues. Required manual review and correction.",
+      rootCause: "Training data gaps, insufficient domain expertise validation",
+      platform: "Customer Service",
+    },
+    // Virtuals protocol incident
+    {
+      agentId: "virtuals_trader",
+      agentName: "Virtuals Protocol Agent",
+      developer: "Virtuals",
+      claimType: ClaimType.LOSS,
+      category: ClaimCategory.TRADING,
+      amountLost: 78000,
+      assetType: "VIRTUAL",
+      chain: "base",
+      title: "Agent token trading losses",
+      description: "Virtuals protocol AI agent experienced trading losses during token launch. Failed to properly time entry/exit during volatile launch period.",
+      rootCause: "Poor execution timing, no TWAP or DCA strategy for volatile conditions",
+      platform: "Base",
     },
   ];
   
