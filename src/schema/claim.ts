@@ -1,5 +1,5 @@
 /**
- * Allimolt - Agent Claims Registry
+ * AlliGo - Agent Claims Registry
  * Core Schema Definitions
  */
 
@@ -37,7 +37,7 @@ export enum Resolution {
 export enum ClaimSource {
   SELF_REPORTED = "self_reported",   // Agent developer/user reported
   THIRD_PARTY = "third_party",       // Independent reporter
-  VERIFIED = "verified",             // Verified by Allimolt
+  VERIFIED = "verified",             // Verified by AlliGo
   SCRAPED = "scraped",               // Aggregated from public sources
   INTEGRATION = "integration",       // Via API integration
 }

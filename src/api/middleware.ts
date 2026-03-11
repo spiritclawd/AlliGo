@@ -1,5 +1,5 @@
 /**
- * Allimolt - API Key Authentication Middleware
+ * AlliGo - API Key Authentication Middleware
  * 
  * Usage in endpoints:
  *   const auth = authenticateRequest(request);
@@ -66,7 +66,7 @@ export function authenticateRequest(request: Request): AuthResult {
       valid: false, 
       tier: "free", 
       remaining: 0, 
-      reason: "API key required. Get one free at allimolt.io" 
+      reason: "API key required. Get one free at alligo.ai" 
     };
   }
 

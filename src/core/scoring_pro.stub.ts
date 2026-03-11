@@ -1,13 +1,13 @@
 /**
  * ╔═══════════════════════════════════════════════════════════════════════════╗
- * ║                    ALLIMOLT PRO - PROPRIETARY                             ║
+ * ║                    ALLIGO PRO - PROPRIETARY                               ║
  * ║                    NOT FOR OPEN SOURCE RELEASE                            ║
  * ╚═══════════════════════════════════════════════════════════════════════════╝
  *
  * This file is a STUB for the open-source release.
- * The actual proprietary algorithm is available in Allimolt Pro.
+ * The actual proprietary algorithm is available in AlliGo Pro.
  *
- * For licensing: license@allimolt.io
+ * For licensing: license@alligo.ai
  */
 
 import { AgentClaim, ClaimSeverity } from "../schema/claim";
@@ -54,15 +54,15 @@ export function calculateRiskScorePro(
   correlationScore?: number;
 } {
   throw new Error(
-    "Allimolt Pro scoring is not available in the open-source version. " +
-      "Contact license@allimolt.io for Pro licensing."
+    "AlliGo Pro scoring is not available in the open-source version. " +
+      "Contact license@alligo.ai for Pro licensing."
   );
 }
 
 export function calculateSeverityPro(_claim: Partial<AgentClaim>): ClaimSeverity {
   throw new Error(
-    "Allimolt Pro severity calculation is not available in the open-source version. " +
-      "Contact license@allimolt.io for Pro licensing."
+    "AlliGo Pro severity calculation is not available in the open-source version. " +
+      "Contact license@alligo.ai for Pro licensing."
   );
 }
 
@@ -84,7 +84,7 @@ export function calculateInsurancePremium(
   recommended: boolean;
 } {
   throw new Error(
-    "Insurance premium calculation is an Allimolt Pro feature. " +
-      "Contact license@allimolt.io for licensing."
+    "Insurance premium calculation is an AlliGo Pro feature. " +
+      "Contact license@alligo.ai for licensing."
   );
 }

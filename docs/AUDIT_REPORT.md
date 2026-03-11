@@ -1,4 +1,4 @@
-# ALLIMOLT MVP AUDIT REPORT
+# ALLIGO MVP AUDIT REPORT
 ## Comprehensive Review: Software, Safety, IP, Business, Sustainability
 
 **Date**: 2025-01-XX  
@@ -109,7 +109,7 @@
 ### 3.1 License Structure ✅
 
 ```
-Allimolt Project Structure:
+AlliGo Project Structure:
 ├── MIT Licensed (Open Source)
 │   ├── src/api/                   # API endpoints
 │   ├── src/schema/                # Data models
@@ -128,7 +128,7 @@ Allimolt Project Structure:
 |------------|--------|---------|
 | Code split | ✅ Done | Open core + Pro features |
 | License headers | ✅ Done | Clear MIT vs Proprietary |
-| Trademark | ⚠️ TODO | Register "Allimolt" trademark |
+| Trademark | ⚠️ TODO | Register "AlliGo" trademark |
 | Patent potential | ⚠️ Explore | Risk scoring for AI agents |
 | Copyright notice | ✅ Done | In all files |
 
@@ -149,7 +149,7 @@ Allimolt Project Structure:
 ### 3.4 Recommendations
 
 1. **IMMEDIATE**: Add license headers to all new files
-2. **30 DAYS**: File trademark for "Allimolt"
+2. **30 DAYS**: File trademark for "AlliGo"
 3. **60 DAYS**: Consult patent attorney for scoring algorithm
 4. **ONGOING**: Keep proprietary code in separate repo
 
@@ -162,7 +162,7 @@ Allimolt Project Structure:
 | Stream | Price | Target Market | Revenue Potential |
 |--------|-------|---------------|-------------------|
 | API Subscriptions | $49-$499/mo | Developers, Platforms | $100K-$500K/yr |
-| Insurance Partnerships | $50K-$500K/yr | Armilla, Allianz | $200K-$1M/yr |
+| Insurance Partnerships | $50K-$500K/yr | Armilla, major insurers | $200K-$1M/yr |
 | Agent Certification | $99-$299/mo | Agent developers | $50K-$200K/yr |
 | Data Licensing | $5K-$10K+ | Researchers, VCs | $50K-$150K/yr |
 

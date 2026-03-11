@@ -1,14 +1,14 @@
 /**
  * ╔═══════════════════════════════════════════════════════════════════════════╗
- * ║                    ALLIMOLT PROPRIETARY LICENSE                           ║
+ * ║                    ALLIGO PROPRIETARY LICENSE                             ║
  * ╠═══════════════════════════════════════════════════════════════════════════╣
  * ║                                                                           ║
- * ║  This file is part of Allimolt Pro - The Credit Bureau for AI Agents.    ║
+ * ║  This file is part of AlliGo Pro - The Credit Bureau for AI Agents.       ║
  * ║                                                                           ║
  * ║  LICENSE: PROPRIETARY / COMMERCIAL                                        ║
  * ║  This code is NOT part of the open-source release.                        ║
  * ║                                                                           ║
- * ║  For licensing inquiries: license@allimolt.io                             ║
+ * ║  For licensing inquiries: license@alligo.ai                               ║
  * ║                                                                           ║
  * ║  Open source version uses: src/core/scoring_open.ts                       ║
  * ║  Pro/Enterprise version uses: src/core/scoring_pro.ts (this file)         ║

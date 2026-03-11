@@ -1,12 +1,12 @@
 /**
- * Allimolt - Open Source Risk Scoring Algorithm
+ * AlliGo - Open Source Risk Scoring Algorithm
  *
  * This is the community version of the risk scoring algorithm.
  * It provides transparent, auditable risk assessment for AI agents.
  *
  * LICENSE: MIT (Open Source)
  *
- * For enhanced scoring features, see Allimolt Pro.
+ * For enhanced scoring features, see AlliGo Pro.
  */
 
 import {

@@ -1,8 +1,8 @@
-# Allimolt Night Session Worklog
+# AlliGo Session Worklog
 
 ## Summary
 
-Built and polished Allimolt MVP - The Credit Bureau for AI Agents.
+Built and polished AlliGo MVP - The Credit Bureau for AI Agents.
 
 ## Completed
 
@@ -47,7 +47,7 @@ Built and polished Allimolt MVP - The Credit Bureau for AI Agents.
 ## File Structure
 
 ```
-allimolt/
+alligo/
 ├── README.md              # Full documentation
 ├── CONTRIBUTING.md        # Contribution guidelines  
 ├── package.json           # Dependencies
@@ -89,7 +89,7 @@ allimolt/
 ## How to Run
 
 ```bash
-cd allimolt
+cd alligo
 bun run dev
 # Open http://localhost:3399
 ```
@@ -97,3 +97,72 @@ bun run dev
 ---
 
 Session completed. Ready for morning review.
+
+---
+
+## Z's Bug Fixes (Post-Minimax Review)
+
+### Issues Found in Minimax's Commit
+Minimax (the other AI) pushed a commit "Simplify auth layer and clean up unused ingestion code" but introduced **runtime-breaking bugs**:
+
+1. **Missing Exports**: `middleware.ts` imports `TIERS` and `TierName` from `auth.ts`, but they weren't exported
+2. **Type Mismatch**: `validateApiKey()` returns `APIKey | null`, but middleware expected `{ valid, tier, remaining }`
+3. **Async/Sync Mismatch**: `authenticateRequest` was async but `validateApiKey` is synchronous
+4. **Deleted Ingestion**: Removed `brave_search.ts` and `ingest-live.ts` (the live data pipeline!)
+
+### Fixes Applied
+- Added `TierName` type and `TIERS` constant exports to `auth.ts`
+- Added `tier` property to `APIKey` interface
+- Fixed `authenticateRequest` to work with correct return types
+- Removed async from `authenticateRequest` (validateApiKey is sync)
+- Added rate limit calculation based on tier configuration
+
+### What Was Lost
+Minimax deleted the Brave Search ingestion pipeline. This was the **future growth engine** for automatically discovering new AI agent incidents. You may want to restore it from a previous commit if live data discovery is important.
+
+### Commit
+```
+fix: Add missing TIERS export and fix middleware auth
+```
+
+### Still TODO
+- [ ] Restore ingestion pipeline (optional but valuable)
+- [ ] Add PostgreSQL persistence for production
+- [ ] Deploy to production (Vercel + Railway/Fly.io)
+
+---
+
+## Ingestion Pipeline Restored
+
+### Why It Matters
+Minimax deleted the Brave Search ingestion pipeline. This was a strategic mistake because:
+
+1. **Data Moat**: The value of AlliGo is in the DATA, not the code
+2. **Automatic Growth**: Without ingestion, you'd need manual data entry
+3. **First Mover**: You want to discover incidents before competitors
+4. **Live Product**: Ingestion makes it a living product, not a static demo
+
+### What Was Restored
+- `src/ingestion/brave_search.ts` - Brave Search API integration
+- `src/ingestion/ingest-live.ts` - Live ingestion runner
+- `bun run ingest` script in package.json
+
+### How to Use
+```bash
+# Set your Brave API key
+export BRAVE_API_KEY="your_key_here"
+
+# Run ingestion
+bun run ingest
+
+# Or run on a schedule (in code)
+startIngestionScheduler(24 * 60 * 60 * 1000, (incidents) => {
+  console.log(`Found ${incidents.length} new incidents`);
+});
+```
+
+### Features
+- Searches 15 targeted queries for AI agent failures
+- Extracts: agent name, amount lost, chain, platform
+- Deduplicates by URL
+- Adds directly to the database as pending claims

@@ -1,8 +1,8 @@
-# Allimolt Business Model & Revenue Streams
+# AlliGo Business Model & Revenue Streams
 
 ## 🎯 Core Value Proposition
 
-**Allimolt is the data layer for AI agent insurance.**
+**AlliGo is the data layer for AI agent insurance.**
 
 Without us:
 - Insurance companies can't underwrite AI risk (no data)
@@ -43,7 +43,7 @@ With us:
 
 ### 3. Agent Certification (Trust Signals)
 
-**"Allimolt Certified" Badge**
+**"AlliGo Certified" Badge**
 
 | Service | Price |
 |---------|-------|
@@ -82,7 +82,7 @@ With us:
 
 ### Phase 3: Insurance Partnerships
 - Partner with Armilla (already insures AI)
-- Approach Allianz, Munich Re, Swiss Re
+- Approach major insurers
 - Build underwriting API
 - Target: 1-2 insurance partnerships
 
@@ -107,9 +107,9 @@ With us:
 
 ---
 
-## 💡 The Allianz Acquisition Path
+## 💡 Strategic Acquisition Path
 
-### Why Allianz Would Buy Us:
+### Why Major Insurers Would Buy Us:
 
 1. **They insure AI already** - They need data
 2. **We have the data** - Real claims, real losses
@@ -139,7 +139,7 @@ With us:
 
 ```typescript
 // Before executing an agent action
-const agentScore = await allimolt.getAgentScore('lobstar_wilde');
+const agentScore = await alligo.getAgentScore('lobstar_wilde');
 if (agentScore.grade === 'F') {
   throw new Error('Agent not trusted. Risk score too low.');
 }
@@ -149,7 +149,7 @@ if (agentScore.grade === 'F') {
 
 ```typescript
 // Underwriting API
-const riskAssessment = await allimolt.getUnderwritingReport({
+const riskAssessment = await alligo.getUnderwritingReport({
   agentId: 'trading_bot_alpha',
   coverageType: 'theft',
   coverageLimit: 1000000,
@@ -160,7 +160,7 @@ const riskAssessment = await allimolt.getUnderwritingReport({
 ### For Developers (Revenue: Subscriptions)
 
 ```bash
-curl https://api.allimolt.io/v1/agents/lobstar_wilde/score \
+curl https://api.alligo.ai/v1/agents/lobstar_wilde/score \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 

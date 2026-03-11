@@ -1,5 +1,5 @@
 /**
- * Allimolt - Unit Tests
+ * AlliGo - Unit Tests
  */
 
 import { describe, test, expect } from "bun:test";

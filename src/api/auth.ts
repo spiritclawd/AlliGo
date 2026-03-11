@@ -1,5 +1,5 @@
 /**
- * Allimolt - Auth Layer
+ * AlliGo - Auth Layer
  * 
  * API key based authentication for private API access
  */
@@ -30,7 +30,7 @@ export interface APIKey {
 const apiKeys: Map<string, APIKey> = new Map();
 
 // Default admin key - MUST be changed in production
-const DEFAULT_ADMIN_KEY = "allimolt_admin_change_me";
+const DEFAULT_ADMIN_KEY = "alligo_admin_change_me";
 
 function hashKey(key: string): string {
   // Simple hash for demo - in production use proper bcrypt/argon2
@@ -77,7 +77,7 @@ export function addApiKey(
   tier: TierName = "free",
   permissions: ("read" | "write" | "admin")[] = ["read"],
 ): { key: APIKey; plainKey: string } {
-  const plainKey = `allimolt_${crypto.randomUUID().replace(/-/g, "")}`;
+  const plainKey = `alligo_${crypto.randomUUID().replace(/-/g, "")}`;
   const hashedKey = hashKey(plainKey);
   
   const tierConfig = TIERS[tier];

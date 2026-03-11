@@ -1,5 +1,5 @@
 /**
- * Allimolt - Security Layer
+ * AlliGo - Security Layer
  *
  * Provides rate limiting, input validation, and security utilities
  */

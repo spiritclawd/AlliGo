@@ -1,5 +1,5 @@
 /**
- * Allimolt - Database Layer
+ * AlliGo - Database Layer
  * SQLite for MVP, designed to scale to PostgreSQL
  */
 

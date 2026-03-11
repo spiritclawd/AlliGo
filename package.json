@@ -1,11 +1,12 @@
 {
-  "name": "allimolt",
+  "name": "alligo",
   "version": "0.1.0",
   "description": "The Credit Bureau for AI Agents - Track failures, losses, and disputes",
   "main": "src/api/server.ts",
   "scripts": {
     "dev": "bun run src/api/server.ts",
     "start": "bun run src/api/server.ts",
+    "ingest": "bun run src/ingestion/ingest-live.ts",
     "test": "bun test"
   },
   "keywords": [
@@ -16,7 +17,7 @@
     "autonomous-agents",
     "credit-bureau"
   ],
-  "author": "Allimolt",
+  "author": "AlliGo",
   "license": "MIT",
   "dependencies": {}
 }

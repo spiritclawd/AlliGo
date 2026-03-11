@@ -1,4 +1,4 @@
-# Allimolt
+# AlliGo
 
 **The Credit Bureau for AI Agents**
 
@@ -21,7 +21,7 @@ Every day, autonomous agents make mistakes that cost real money. But this data v
 
 ## The Solution
 
-Allimolt is the first **Agent Claims Registry** — a database of agent failures, losses, and disputes.
+AlliGo is the first **Agent Claims Registry** — a database of agent failures, losses, and disputes.
 
 ```
 BEFORE: Agent fails → Data lost → No accountability → Same mistakes repeat
@@ -33,9 +33,9 @@ AFTER:  Agent fails → Claim logged → History preserved → Risk quantified
 | Stakeholder | Value |
 |-------------|-------|
 | **Agent Developers** | "My agent has 0 claims in 10,000 transactions" — trust signal |
-| **Agent Users** | "Check Allimolt before trusting an agent" — due diligence |
+| **Agent Users** | "Check AlliGo before trusting an agent" — due diligence |
 | **Insurance Companies** | "We have data to underwrite agent policies" — new market |
-| **Agent Platforms** | "We require clean Allimolt record" — quality filter |
+| **Agent Platforms** | "We require clean AlliGo record" — quality filter |
 | **Researchers** | "Real failure patterns, not hypotheticals" — better agents |
 
 ## The Data We Capture
@@ -108,7 +108,7 @@ GET /api/stats
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     ALLIMOLT                            │
+│                      ALLIGO                             │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │   ┌──────────────┐    ┌──────────────┐                  │
@@ -173,8 +173,8 @@ curl http://localhost:3000/api/agents/agent_trader_001/score
 ### Phase 3: Moat
 - [ ] Partnership with Armilla (insurance data)
 - [ ] On-chain verification of claims
-- [ ] Agent insurance products built on Allimolt data
-- [ ] "Allimolt Certified" badge for agents
+- [ ] Agent insurance products built on AlliGo data
+- [ ] "AlliGo Certified" badge for agents
 
 ## The Vision
 
@@ -185,14 +185,14 @@ TODAY:
 
 TOMORROW:
   "I want to use Agent X"
-  → Check Allimolt score
+  → Check AlliGo score
   → "0 claims, 10,000 successful transactions, bonded $100K"
   → Proceed with confidence
 ```
 
 ## IP Protection Strategy
 
-Allimolt follows a dual-license model inspired by successful open-core projects:
+AlliGo follows a dual-license model inspired by successful open-core projects:
 
 | Component | License | Purpose |
 |-----------|---------|---------|
@@ -207,11 +207,11 @@ This ensures:
 - ✅ Enterprise features for insurance underwriting
 - ✅ Data remains open and accessible
 
-For Pro licensing: **license@allimolt.io**
+For Pro licensing: **license@alligo.ai**
 
 ## Security
 
-Allimolt implements multiple security layers:
+AlliGo implements multiple security layers:
 
 - **Rate Limiting**: Prevents API abuse
 - **Input Validation**: Sanitizes all user input
@@ -223,7 +223,7 @@ See `src/security/middleware.ts` for implementation details.
 
 ## Data Sources
 
-Allimolt aggregates incident data from:
+AlliGo aggregates incident data from:
 
 - **Self-reported claims**: Users submit incidents
 - **Brave Search API**: Automated incident discovery
@@ -239,6 +239,6 @@ Allimolt aggregates incident data from:
 
 **Built by agents, for agents.**
 
-*Named after Allianz, because insurance needs data.*
+*Your trusted partner in AI agent risk assessment.*
 
 *Following the OpenClaw and Moltbook playbook: Open core, Pro features.*

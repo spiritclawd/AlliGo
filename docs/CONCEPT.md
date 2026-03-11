@@ -1,4 +1,4 @@
-# Allimolt Concept Audit
+# AlliGo Concept Audit
 
 ## Strengths
 
@@ -21,7 +21,7 @@ We don't need to be "trusted" - we just aggregate data. Users can verify claims 
 - API access (freemium)
 - Premium risk scores
 - Insurance partnership (sell data to insurers)
-- "Allimolt Certified" badge
+- "AlliGo Certified" badge
 - Enterprise reports
 
 ### 6. Timing
@@ -48,7 +48,7 @@ We don't need to be "trusted" - we just aggregate data. Users can verify claims 
   - Tier 1: Self-reported (lowest trust)
   - Tier 2: Third-party reported
   - Tier 3: On-chain verified (tx hash matches)
-  - Tier 4: Allimolt verified (we investigated)
+  - Tier 4: AlliGo verified (we investigated)
 - Let users judge trust level
 - Insurance companies will verify anyway
 
@@ -83,8 +83,8 @@ We don't need to be "trusted" - we just aggregate data. Users can verify claims 
 - Move FAST (MVP in days, not months)
 - Open data approach (hard to compete with free)
 - Partnership not competition:
-  - "Armilla uses Allimolt data for underwriting"
-  - "Daydreams integrates Allimolt scores"
+  - "Armilla uses AlliGo data for underwriting"
+  - "Daydreams integrates AlliGo scores"
 
 ### 7. Data Quality
 **Weakness:** Early data will be noisy
@@ -107,7 +107,7 @@ We don't need to be "trusted" - we just aggregate data. Users can verify claims 
 It's not the tech. Anyone can build a claims database.
 
 The moat is:
-1. **Brand** - "Check Allimolt" becomes the standard
+1. **Brand** - "Check AlliGo" becomes the standard
 2. **Data Volume** - 1000s of claims no one else has
 3. **Integrations** - Platforms bake us in
 4. **Trust** - Neutral, open, verifiable
@@ -138,7 +138,7 @@ The moat is:
 - API documentation
 - Partnership conversations with Armilla, Daydreams
 - Browser extension for agent scores
-- "Allimolt Verified" badge program
+- "AlliGo Verified" badge program
 
 ### Phase 3: Moat (Month 3-6)
 - Enterprise API tier
@@ -152,12 +152,12 @@ The moat is:
 TODAY: "Is this agent safe?" → No one knows
      → "I'll just try it and maybe lose money"
 
-LATER: "Is this agent safe?" → Check Allimolt
+LATER: "Is this agent safe?" → Check AlliGo
      → "Score: 85/100, 0 claims, $1M bonded"
      → Informed decision
 
-EVENTUALLY: Agents without Allimolt score are suspicious
-          → Insurance requires Allimolt data
+EVENTUALLY: Agents without AlliGo score are suspicious
+          → Insurance requires AlliGo data
           → We become infrastructure
 ```
 

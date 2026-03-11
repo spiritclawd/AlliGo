@@ -1,5 +1,5 @@
 /**
- * Allimolt - API Server
+ * AlliGo - API Server
  * The Credit Bureau for AI Agents
  */
 
@@ -368,11 +368,11 @@ async function handleRequest(req: Request): Promise<Response> {
   
   if (path === "/" && method === "GET") {
     return json({
-      name: "Allimolt",
+      name: "AlliGo",
       description: "The Credit Bureau for AI Agents - PRIVATE API",
       version: "0.2.0",
       auth: "Bearer <API_KEY> required for all endpoints",
-      defaultKey: "allimolt_admin_change_me",
+      defaultKey: "alligo_admin_change_me",
       endpoints: {
         "POST /api/claims": "Submit a new claim (write permission)",
         "GET /api/claims": "List all claims (read permission)",
@@ -701,7 +701,7 @@ const server = serve({
 console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║   🛡️  ALLIMOLT - The Credit Bureau for AI Agents         ║
+║   🛡️  ALLIGO - The Credit Bureau for AI Agents             ║
 ║                                                           ║
 ║   Server: http://localhost:3399                          ║
 ║   Stats:  http://localhost:3399/api/stats                ║

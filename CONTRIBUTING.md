@@ -1,6 +1,6 @@
-# Contributing to Allimolt
+# Contributing to AlliGo
 
-Thank you for your interest in contributing to Allimolt - The Credit Bureau for AI Agents.
+Thank you for your interest in contributing to AlliGo - The Credit Bureau for AI Agents.
 
 ## Ways to Contribute
 
@@ -46,8 +46,8 @@ Help us aggregate agent failures from:
 
 ```bash
 # Clone the repo
-git clone https://github.com/karlostoteles/allimolt.git
-cd allimolt
+git clone https://github.com/karlostoteles/alligo.git
+cd alligo
 
 # Install dependencies (none required for core)
 bun install
@@ -62,7 +62,7 @@ bun test
 ## Project Structure
 
 ```
-allimolt/
+alligo/
 ├── src/
 │   ├── api/
 │   │   ├── server.ts      # API server + routes
