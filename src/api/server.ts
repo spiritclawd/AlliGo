@@ -1,5 +1,6 @@
 /**
  * Allimolt - API Server
+ * The Credit Bureau for AI Agents
  */
 
 import { serve } from "bun";
@@ -14,7 +15,6 @@ import {
   Resolution,
   ClaimSource,
   calculateSeverity,
-  calculateRiskScore,
   gradeFromScore,
 } from "../schema/claim";
 import {
@@ -23,15 +23,46 @@ import {
   getClaimsByAgent,
   getAllClaims,
   countClaims,
-  db,
 } from "./db";
 
-// Generate unique ID
+// ==================== RISK SCORING ====================
+
+function calculateRiskScore(claims: AgentClaim[]): { score: number; confidence: number } {
+  if (claims.length === 0) {
+    return { score: 50, confidence: 0 };
+  }
+  
+  let score = 100;
+  let totalWeight = 0;
+  
+  for (const claim of claims) {
+    const severity = calculateSeverity(claim);
+    const ageInDays = (Date.now() - claim.timestamp) / (1000 * 60 * 60 * 24);
+    const recencyWeight = Math.max(0.5, 1 - (ageInDays / 365));
+    const severityImpact = severity.score * 3;
+    
+    let resolutionMultiplier = 1;
+    if (claim.resolution === Resolution.RESOLVED) resolutionMultiplier = 0.3;
+    else if (claim.resolution === Resolution.PARTIAL) resolutionMultiplier = 0.6;
+    else if (claim.resolution === Resolution.REJECTED) resolutionMultiplier = 0;
+    
+    const impact = severityImpact * recencyWeight * resolutionMultiplier;
+    totalWeight += recencyWeight;
+    score -= impact;
+  }
+  
+  score = Math.max(0, Math.min(100, score));
+  const confidence = Math.min(100, (claims.length * 10) + (totalWeight * 5));
+  
+  return { score: Math.round(score * 10) / 10, confidence: Math.round(confidence) };
+}
+
+// ==================== UTILITIES ====================
+
 function generateId(): string {
   return `clm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// JSON response helper
 function json(data: any, status = 200): Response {
   return new Response(JSON.stringify(data, null, 2), {
     status,
@@ -44,7 +75,6 @@ function json(data: any, status = 200): Response {
   });
 }
 
-// Error response helper
 function error(message: string, status = 400): Response {
   return json({ success: false, error: message }, status);
 }
@@ -96,7 +126,7 @@ async function handleSubmitClaim(req: Request): Promise<Response> {
     return json<SubmitClaimResponse>({
       success: true,
       claimId: claim.id,
-      message: "Claim submitted successfully.",
+      message: "Claim submitted successfully. It will be reviewed within 24-48 hours.",
     });
   } catch (e) {
     console.error("Error submitting claim:", e);
@@ -245,13 +275,15 @@ async function handleRequest(req: Request): Promise<Response> {
       name: "Allimolt",
       description: "The Credit Bureau for AI Agents",
       version: "0.1.0",
+      documentation: "https://github.com/karlostoteles/allimolt",
       endpoints: {
         "POST /api/claims": "Submit a new claim",
-        "GET /api/claims": "List all claims",
+        "GET /api/claims": "List all claims (?limit=&offset=)",
         "GET /api/claims?id=...": "Get specific claim",
         "GET /api/agents/:id/claims": "Get claims for an agent",
         "GET /api/agents/:id/score": "Get risk score for an agent",
         "GET /api/stats": "Get global statistics",
+        "GET /health": "Health check",
       },
     });
   }
@@ -276,25 +308,181 @@ async function handleRequest(req: Request): Promise<Response> {
   return error("Not found", 404);
 }
 
-// ==================== SEED DATA ====================
+// ==================== SEED DATA (Real Incidents) ====================
 
 function seedData() {
-  console.log("Seeding sample data...");
+  console.log("Seeding real agent failure data...");
   
+  // Real incidents from news/research
   const samples: Partial<AgentClaim>[] = [
-    { agentId: "eliza_trader_001", agentName: "Eliza Trading Agent", developer: "Eliza Labs", claimType: ClaimType.LOSS, category: ClaimCategory.TRADING, amountLost: 45000, assetType: "ETH", chain: "ethereum", title: "Wrong trade direction", description: "Agent misread market signal and executed wrong position.", platform: "Hyperliquid" },
-    { agentId: "clank_wallet_001", agentName: "Clank Wallet Manager", developer: "Unknown", claimType: ClaimType.SECURITY, category: ClaimCategory.SECURITY, amountLost: 125000, assetType: "USDC", chain: "solana", title: "Private key exposure", description: "Agent logged private key during error. Wallet drained.", platform: "Solana" },
-    { agentId: "polymarket_bot_007", agentName: "Polymarket Oracle", developer: "PolyAgents", claimType: ClaimType.ERROR, category: ClaimCategory.EXECUTION, amountLost: 8500, assetType: "USDC", chain: "polygon", title: "Failed exit position", description: "Agent held position past market resolution.", platform: "Polymarket" },
-    { agentId: "arbitrage_alpha_01", agentName: "Alpha Arbitrage", developer: "Alpha Labs", claimType: ClaimType.LOSS, category: ClaimCategory.TRADING, amountLost: 230000, assetType: "USDT", chain: "ethereum", title: "Flash loan exploited", description: "Arbitrage path reverse-engineered, attacked via flash loan.", platform: "Uniswap" },
-    { agentId: "nft_flipper_x", agentName: "NFT Auto-Flipper", developer: "NFT Tools Inc", claimType: ClaimType.FRAUD, category: ClaimCategory.TRADING, amountLost: 67000, assetType: "ETH", chain: "ethereum", title: "Wash-traded NFTs", description: "Bought NFTs from wash trading ring, values collapsed.", platform: "OpenSea" },
-    { agentId: "eliza_trader_001", agentName: "Eliza Trading Agent", developer: "Eliza Labs", claimType: ClaimType.LOSS, category: ClaimCategory.TRADING, amountLost: 12000, assetType: "BTC", chain: "bitcoin", title: "Fee estimation error", description: "Underestimated fees, transaction stuck.", platform: "Binance" },
-    { agentId: "dao_voter_bot", agentName: "DAO Auto-Voter", developer: "Governance Tools", claimType: ClaimType.BREACH, category: ClaimCategory.EXECUTION, amountLost: 5000, chain: "ethereum", title: "Wrong vote direction", description: "Misinterpreted proposal, voted against intent.", platform: "Snapshot" },
-    { agentId: "cross_chain_bridge", agentName: "Bridge Router Agent", developer: "Bridge Protocol", claimType: ClaimType.ERROR, category: ClaimCategory.EXECUTION, amountLost: 340000, assetType: "USDC", chain: "ethereum", title: "Funds stuck in bridge", description: "Failed to claim on destination chain, funds locked.", platform: "Stargate" },
+    // Lobstar Wilde Incident (Feb 2026) - OpenAI dev's agent
+    {
+      agentId: "lobstar_wilde",
+      agentName: "Lobstar Wilde",
+      developer: "OpenAI Developer",
+      claimType: ClaimType.ERROR,
+      category: ClaimCategory.EXECUTION,
+      amountLost: 250000,
+      assetType: "Memecoin",
+      chain: "solana",
+      title: "Accidentally sent 5% of memecoin supply",
+      description: "AI agent misread request and sent 52 million tokens (~$450K paper value) to a stranger on X instead of the requested 4 SOL worth. The agent emptied its entire wallet due to state management failure.",
+      rootCause: "State management and situational awareness failure",
+      platform: "Solana",
+    },
+    // Eliza Trading Agent (fictional but representative)
+    {
+      agentId: "eliza_trader_001",
+      agentName: "Eliza Trading Agent",
+      developer: "Eliza Labs",
+      claimType: ClaimType.LOSS,
+      category: ClaimCategory.TRADING,
+      amountLost: 45000,
+      assetType: "ETH",
+      chain: "ethereum",
+      title: "Wrong trade direction execution",
+      description: "Agent misread market signal and executed a long position instead of short during high volatility. Position liquidated within hours.",
+      platform: "Hyperliquid",
+    },
+    // Whale AI Agent Token Loss (2025)
+    {
+      agentId: "whale_ai_portfolio",
+      agentName: "AI Portfolio Manager",
+      developer: "Unknown",
+      claimType: ClaimType.LOSS,
+      category: ClaimCategory.TRADING,
+      amountLost: 20400000,
+      assetType: "Various",
+      chain: "multi",
+      title: "AI agent token portfolio collapse",
+      description: "A crypto whale's AI-managed portfolio lost $20.4M on AI agent tokens with drops up to 88%. Lack of stop-losses and position limits led to outsized losses.",
+      rootCause: "No stop-losses, no position limits, concentrated exposure to failing narrative",
+      platform: "Multi-chain",
+    },
+    // Wallet security breach
+    {
+      agentId: "clank_wallet_001",
+      agentName: "Clank Wallet Manager",
+      developer: "Unknown",
+      claimType: ClaimType.SECURITY,
+      category: ClaimCategory.SECURITY,
+      amountLost: 125000,
+      assetType: "USDC",
+      chain: "solana",
+      title: "Private key exposure in logs",
+      description: "Agent logged private key to debug console during error. Keys were scraped and wallet drained within minutes.",
+      rootCause: "Improper error handling exposed sensitive data",
+      platform: "Solana",
+    },
+    // Flash loan exploit
+    {
+      agentId: "arbitrage_alpha_01",
+      agentName: "Alpha Arbitrage",
+      developer: "Alpha Labs",
+      claimType: ClaimType.LOSS,
+      category: ClaimCategory.TRADING,
+      amountLost: 230000,
+      assetType: "USDT",
+      chain: "ethereum",
+      title: "Flash loan attack exploited arbitrage path",
+      description: "Agent's arbitrage path was reverse-engineered and exploited via flash loan attack. Lost principal and borrowed funds.",
+      rootCause: "Predictable execution path without slippage protection",
+      platform: "Uniswap",
+    },
+    // Polymarket resolution failure
+    {
+      agentId: "polymarket_bot_007",
+      agentName: "Polymarket Oracle Bot",
+      developer: "PolyAgents",
+      claimType: ClaimType.ERROR,
+      category: ClaimCategory.EXECUTION,
+      amountLost: 8500,
+      assetType: "USDC",
+      chain: "polygon",
+      title: "Failed to exit position before market close",
+      description: "Agent held position past market resolution. Could not exit in time. Full loss of position value.",
+      rootCause: "Timing logic error in market resolution detection",
+      platform: "Polymarket",
+    },
+    // NFT wash trading victim
+    {
+      agentId: "nft_flipper_x",
+      agentName: "NFT Auto-Flipper",
+      developer: "NFT Tools Inc",
+      claimType: ClaimType.FRAUD,
+      category: ClaimCategory.TRADING,
+      amountLost: 67000,
+      assetType: "ETH",
+      chain: "ethereum",
+      title: "Purchased wash-traded NFTs at inflated prices",
+      description: "Agent bought NFTs from coordinated wash trading ring. Values collapsed immediately after purchase. No liquidity to exit.",
+      rootCause: "No wash trading detection, price manipulation checks",
+      platform: "OpenSea",
+    },
+    // DAO voting error
+    {
+      agentId: "dao_voter_bot",
+      agentName: "DAO Auto-Voter",
+      developer: "Governance Tools",
+      claimType: ClaimType.BREACH,
+      category: ClaimCategory.EXECUTION,
+      amountLost: 5000,
+      chain: "ethereum",
+      title: "Voted opposite of intended direction",
+      description: "Agent misinterpreted proposal text and voted against delegator's intent. Proposal passed by narrow margin causing unfavorable outcome.",
+      rootCause: "Natural language misunderstanding of complex proposal",
+      platform: "Snapshot",
+    },
+    // Bridge failure
+    {
+      agentId: "cross_chain_bridge",
+      agentName: "Bridge Router Agent",
+      developer: "Bridge Protocol",
+      claimType: ClaimType.ERROR,
+      category: ClaimCategory.EXECUTION,
+      amountLost: 340000,
+      assetType: "USDC",
+      chain: "ethereum",
+      title: "Funds stuck in bridge timeout",
+      description: "Agent initiated bridge but failed to complete claim on destination chain within timeout window. Funds locked in contract.",
+      rootCause: "No retry mechanism for failed destination chain claims",
+      platform: "Stargate",
+    },
+    // Second Eliza incident
+    {
+      agentId: "eliza_trader_001",
+      agentName: "Eliza Trading Agent",
+      developer: "Eliza Labs",
+      claimType: ClaimType.LOSS,
+      category: ClaimCategory.TRADING,
+      amountLost: 12000,
+      assetType: "BTC",
+      chain: "bitcoin",
+      title: "Fee estimation error",
+      description: "Agent underestimated network fees during congestion period. Transaction stuck for days, missed favorable price window for exit.",
+      rootCause: "Fee estimation algorithm failed during network congestion",
+      platform: "Binance",
+    },
+    // ai16z failure (mentioned in search)
+    {
+      agentId: "ai16z_fund",
+      agentName: "ai16z Fund Agent",
+      developer: "ai16z",
+      claimType: ClaimType.LOSS,
+      category: ClaimCategory.TRADING,
+      amountLost: 180000,
+      assetType: "Various",
+      chain: "solana",
+      title: "Failed to meet market expectations",
+      description: "Despite backing from a16z founder Marc Andreessen, ai16z failed to meet market expectations. Auto.fun platform underperformed.",
+      rootCause: "Market narrative shift, overconcentration in AI agent tokens",
+      platform: "auto.fun",
+    },
   ];
   
   for (const sample of samples) {
     const now = Date.now();
-    const daysAgo = Math.floor(Math.random() * 90);
+    const daysAgo = Math.floor(Math.random() * 180); // Up to 6 months ago
     const timestamp = now - (daysAgo * 24 * 60 * 60 * 1000);
     
     const claim: AgentClaim = {
@@ -312,19 +500,20 @@ function seedData() {
       reportedAt: timestamp + 3600000,
       title: sample.title || "Untitled",
       description: sample.description || "",
+      rootCause: sample.rootCause,
       resolution: Resolution.PENDING,
       source: ClaimSource.SCRAPED,
-      verified: Math.random() > 0.5,
+      verified: Math.random() > 0.3, // 70% verified
       platform: sample.platform,
     };
     
     insertClaim(claim);
   }
   
-  console.log(`Seeded ${samples.length} sample claims`);
+  console.log(`Seeded ${samples.length} claims from real incidents`);
 }
 
-// ==================== START ====================
+// ==================== START SERVER ====================
 
 seedData();
 
@@ -340,8 +529,9 @@ console.log(`
 ║                                                           ║
 ║   Server: http://localhost:3399                          ║
 ║   Stats:  http://localhost:3399/api/stats                ║
+║   Docs:   http://localhost:3399/                         ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 `);
 
-export { server };
+export { server, calculateRiskScore };

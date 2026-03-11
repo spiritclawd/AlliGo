@@ -1,0 +1,289 @@
+openapi: 3.0.3
+info:
+  title: Allimolt API
+  description: |
+    The Credit Bureau for AI Agents.
+    
+    Allimolt tracks AI agent failures, losses, and disputes to enable:
+    - Risk assessment before trusting agents
+    - Insurance underwriting for agent liability
+    - Historical loss data for research
+    
+    ## Authentication
+    Currently open access. API keys coming soon for premium features.
+    
+    ## Rate Limits
+    - 100 requests/minute for unauthenticated users
+    - 1000 requests/minute with API key
+  version: 0.1.0
+  contact:
+    name: Allimolt
+    url: https://github.com/karlostoteles/allimolt
+
+servers:
+  - url: http://localhost:3399
+    description: Local development
+  - url: https://api.allimolt.io
+    description: Production (coming soon)
+
+paths:
+  /:
+    get:
+      summary: API Information
+      description: Returns API name, version, and available endpoints
+      responses:
+        '200':
+          description: API info
+          content:
+            application/json:
+              example:
+                name: Allimolt
+                description: The Credit Bureau for AI Agents
+                version: 0.1.0
+                endpoints:
+                  POST /api/claims: Submit a new claim
+                  GET /api/claims: List all claims
+
+  /health:
+    get:
+      summary: Health Check
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              example:
+                status: ok
+                timestamp: 1709500000000
+
+  /api/stats:
+    get:
+      summary: Global Statistics
+      description: Returns aggregated statistics across all claims
+      responses:
+        '200':
+          description: Global statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  stats:
+                    type: object
+                    properties:
+                      totalClaims:
+                        type: integer
+                      totalValueLost:
+                        type: number
+                      recoveryRate:
+                        type: number
+                      claimsByType:
+                        type: object
+                      claimsByCategory:
+                        type: object
+                      topAgents:
+                        type: array
+
+  /api/claims:
+    get:
+      summary: List Claims
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: id
+          in: query
+          description: Get specific claim by ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of claims
+    post:
+      summary: Submit a Claim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - agentId
+                - claimType
+                - category
+                - amountLost
+                - title
+                - description
+              properties:
+                agentId:
+                  type: string
+                  description: Unique identifier for the agent
+                agentName:
+                  type: string
+                  description: Human-readable agent name
+                developer:
+                  type: string
+                  description: Agent developer/company
+                claimType:
+                  type: string
+                  enum: [loss, error, breach, fraud, security, unknown]
+                category:
+                  type: string
+                  enum: [trading, payment, security, execution, data, compliance, other]
+                amountLost:
+                  type: number
+                  description: Amount lost in USD
+                assetType:
+                  type: string
+                  description: Asset type (ETH, USDC, etc.)
+                chain:
+                  type: string
+                  description: Blockchain (ethereum, solana, etc.)
+                txHash:
+                  type: string
+                  description: Transaction hash if on-chain
+                title:
+                  type: string
+                  maxLength: 200
+                description:
+                  type: string
+                  maxLength: 5000
+                platform:
+                  type: string
+                  description: Platform where incident occurred
+            example:
+              agentId: "my_agent_001"
+              agentName: "My Trading Agent"
+              claimType: "loss"
+              category: "trading"
+              amountLost: 5000
+              assetType: "ETH"
+              chain: "ethereum"
+              title: "Wrong trade execution"
+              description: "Agent executed wrong trade direction due to signal misinterpretation"
+              platform: "Uniswap"
+      responses:
+        '200':
+          description: Claim submitted
+          content:
+            application/json:
+              example:
+                success: true
+                claimId: "clm_1709500000_abc123"
+                message: "Claim submitted successfully"
+        '400':
+          description: Validation error
+
+  /api/agents/{agentId}/score:
+    get:
+      summary: Get Agent Risk Score
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent risk assessment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agentId:
+                    type: string
+                  riskScore:
+                    type: number
+                    minimum: 0
+                    maximum: 100
+                    description: Risk score (higher = safer)
+                  confidence:
+                    type: number
+                    description: Confidence level of the score
+                  grade:
+                    type: string
+                    enum: [A, B, C, D, F, NR]
+                  totalClaims:
+                    type: integer
+                  totalValueLost:
+                    type: number
+                  summary:
+                    type: string
+              example:
+                agentId: "eliza_trader_001"
+                riskScore: 65.4
+                confidence: 30
+                grade: "C"
+                totalClaims: 2
+                totalValueLost: 57000
+                summary: "Moderate risk. 2 claim(s) with $57,000 total loss."
+
+  /api/agents/{agentId}/claims:
+    get:
+      summary: Get Claims for Agent
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of claims for this agent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  claims:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Claim'
+                  total:
+                    type: integer
+
+components:
+  schemas:
+    Claim:
+      type: object
+      properties:
+        id:
+          type: string
+        agentId:
+          type: string
+        agentName:
+          type: string
+        claimType:
+          type: string
+          enum: [loss, error, breach, fraud, security, unknown]
+        category:
+          type: string
+        amountLost:
+          type: number
+        assetType:
+          type: string
+        chain:
+          type: string
+        timestamp:
+          type: number
+        title:
+          type: string
+        description:
+          type: string
+        resolution:
+          type: string
+          enum: [pending, resolved, partial, disputed, unrecoverable, rejected]
+        verified:
+          type: boolean
+        platform:
+          type: string
