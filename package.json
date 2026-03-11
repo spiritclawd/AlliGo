@@ -1,0 +1,22 @@
+{
+  "name": "allimolt",
+  "version": "0.1.0",
+  "description": "The Credit Bureau for AI Agents - Track failures, losses, and disputes",
+  "main": "src/api/server.ts",
+  "scripts": {
+    "dev": "bun run src/api/server.ts",
+    "start": "bun run src/api/server.ts",
+    "test": "bun test"
+  },
+  "keywords": [
+    "ai-agents",
+    "insurance",
+    "risk",
+    "claims",
+    "autonomous-agents",
+    "credit-bureau"
+  ],
+  "author": "Allimolt",
+  "license": "MIT",
+  "dependencies": {}
+}
