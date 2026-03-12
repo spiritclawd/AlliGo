@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlliGo - Agent Risk Scanner</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      width: 350px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0f;
+      color: #e5e5e5;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    .header p {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+    
+    .content {
+      padding: 16px;
+    }
+    
+    .search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .search-box input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #1a1a24;
+      color: #fff;
+      font-size: 13px;
+    }
+    
+    .search-box input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .search-box button {
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .search-box button:hover {
+      opacity: 0.9;
+    }
+    
+    .result {
+      background: #1a1a24;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+    
+    .result.error {
+      border: 1px solid #ef4444;
+      color: #ef4444;
+    }
+    
+    .result.loading {
+      text-align: center;
+      color: #666;
+      padding: 24px;
+    }
+    
+    .grade-badge {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+      margin: 0 auto 12px;
+    }
+    
+    .grade-A { background: #22c55e; color: #fff; }
+    .grade-B { background: #3b82f6; color: #fff; }
+    .grade-C { background: #eab308; color: #000; }
+    .grade-D { background: #f97316; color: #fff; }
+    .grade-F { background: #ef4444; color: #fff; }
+    .grade-NR { background: #6b7280; color: #fff; }
+    
+    .agent-name {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      word-break: break-all;
+    }
+    
+    .agent-summary {
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .stat {
+      text-align: center;
+      padding: 8px;
+      background: #252530;
+      border-radius: 8px;
+    }
+    
+    .stat-value {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    
+    .stat-label {
+      font-size: 10px;
+      color: #888;
+      margin-top: 2px;
+    }
+    
+    .stat-value.negative {
+      color: #ef4444;
+    }
+    
+    .recent-claims {
+      margin-top: 16px;
+    }
+    
+    .recent-claims h3 {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    
+    .claim-item {
+      background: #252530;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    
+    .claim-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    
+    .claim-meta {
+      color: #666;
+      font-size: 11px;
+    }
+    
+    .footer {
+      padding: 12px 16px;
+      text-align: center;
+      border-top: 1px solid #222;
+    }
+    
+    .footer a {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    
+    .quick-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .quick-action {
+      flex: 1;
+      padding: 8px;
+      background: #1a1a24;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #888;
+      font-size: 11px;
+      cursor: pointer;
+      text-align: center;
+    }
+    
+    .quick-action:hover {
+      border-color: #667eea;
+      color: #fff;
+    }
+    
+    .api-key-input {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #1a1a24;
+      color: #fff;
+      font-size: 12px;
+      width: 100%;
+    }
+    
+    .api-key-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .settings-toggle {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🛡️ AlliGo</h1>
+    <p>Credit Bureau for AI Agents</p>
+    <button class="settings-toggle" id="settingsBtn">⚙️</button>
+  </div>
+  
+  <div class="content" id="mainContent">
+    <div class="search-box">
+      <input type="text" id="agentId" placeholder="Enter agent ID...">
+      <button id="searchBtn">Check</button>
+    </div>
+    
+    <div class="quick-actions">
+      <button class="quick-action" data-agent="eliza_trader_001">Eliza</button>
+      <button class="quick-action" data-agent="lobstar_wilde">Lobstar</button>
+      <button class="quick-action" data-agent="ai16z_fund">ai16z</button>
+    </div>
+    
+    <div id="result"></div>
+  </div>
+  
+  <div class="content" id="settingsContent" style="display: none;">
+    <h3 style="margin-bottom: 12px;">Settings</h3>
+    <label style="font-size: 12px; color: #888; display: block; margin-bottom: 6px;">API Key</label>
+    <input type="password" id="apiKey" class="api-key-input" placeholder="Enter your AlliGo API key">
+    <p style="font-size: 11px; color: #666; margin-top: 8px;">
+      Get your API key at <a href="#" style="color: #667eea;">alligo.ai</a>
+    </p>
+    <button id="saveSettings" style="width: 100%; margin-top: 12px; padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer;">
+      Save
+    </button>
+  </div>
+  
+  <div class="footer">
+    <a href="https://alligo.ai" target="_blank">View Full Dashboard →</a>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
