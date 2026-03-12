@@ -1,289 +1,691 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
-  title: Allimolt API
+  title: AlliGo API
   description: |
-    The Credit Bureau for AI Agents.
+    # The Credit Bureau for AI Agents
     
-    Allimolt tracks AI agent failures, losses, and disputes to enable:
-    - Risk assessment before trusting agents
-    - Insurance underwriting for agent liability
-    - Historical loss data for research
+    AlliGo tracks AI agent failures, losses, and disputes. Use this API to:
+    
+    - **Query agent risk scores** before trusting an agent
+    - **Submit claims** when agents fail or cause losses
+    - **Get global statistics** on agent failures
+    - **Generate badges** for your agent's trust score
     
     ## Authentication
-    Currently open access. API keys coming soon for premium features.
+    
+    Most endpoints require an API key. Include it in the `Authorization` header:
+    
+    ```
+    Authorization: Bearer your-api-key
+    ```
     
     ## Rate Limits
-    - 100 requests/minute for unauthenticated users
-    - 1000 requests/minute with API key
-  version: 0.1.0
+    
+    | Tier | Requests/Minute |
+    |------|-----------------|
+    | Free | 100 |
+    | Pro | 1,000 |
+    | Enterprise | 10,000 |
+    
+    ## Base URL
+    
+    - Production: `https://api.alligo.io`
+    - Development: `http://localhost:3399`
+    
+  version: 0.2.0
   contact:
-    name: Allimolt
-    url: https://github.com/karlostoteles/allimolt
+    name: AlliGo Support
+    email: hello@alligo.io
+    url: https://alligo.io
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
 
 servers:
+  - url: https://api.alligo.io
+    description: Production
   - url: http://localhost:3399
-    description: Local development
-  - url: https://api.allimolt.io
-    description: Production (coming soon)
+    description: Development
+
+tags:
+  - name: Claims
+    description: Submit and query agent failure claims
+  - name: Agents
+    description: Get agent risk scores and history
+  - name: Statistics
+    description: Global statistics on agent failures
+  - name: Badges
+    description: Generate trust badges for agents
+  - name: API Keys
+    description: Manage API keys
 
 paths:
-  /:
-    get:
-      summary: API Information
-      description: Returns API name, version, and available endpoints
-      responses:
-        '200':
-          description: API info
-          content:
-            application/json:
-              example:
-                name: Allimolt
-                description: The Credit Bureau for AI Agents
-                version: 0.1.0
-                endpoints:
-                  POST /api/claims: Submit a new claim
-                  GET /api/claims: List all claims
-
   /health:
     get:
-      summary: Health Check
+      summary: Health check
+      description: Returns server health status. No authentication required.
+      operationId: healthCheck
       responses:
         '200':
-          description: Service healthy
+          description: Server is healthy
           content:
             application/json:
               example:
                 status: ok
-                timestamp: 1709500000000
+                timestamp: 1707849600000
+                version: 0.2.0
+                database: ./data/alligo.db
+                claims: 24
 
   /api/stats:
     get:
-      summary: Global Statistics
-      description: Returns aggregated statistics across all claims
+      summary: Get global statistics
+      description: Returns aggregate statistics about all tracked claims. Requires read permission.
+      operationId: getStats
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Global statistics
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  stats:
-                    type: object
-                    properties:
-                      totalClaims:
-                        type: integer
-                      totalValueLost:
-                        type: number
-                      recoveryRate:
-                        type: number
-                      claimsByType:
-                        type: object
-                      claimsByCategory:
-                        type: object
-                      topAgents:
-                        type: array
+                $ref: '#/components/schemas/StatsResponse'
+              example:
+                success: true
+                stats:
+                  totalClaims: 24
+                  totalValueLost: 56789000
+                  totalValueRecovered: 2340000
+                  recoveryRate: 0.041
+                  claimsByType:
+                    loss: 14
+                    error: 5
+                    security: 3
+                    fraud: 2
+                  claimsByCategory:
+                    trading: 12
+                    execution: 6
+                    security: 4
+                    payment: 2
+                  claimsByChain:
+                    ethereum: 10
+                    solana: 6
+                    multi: 4
+                  topAgents:
+                    - agentId: whale_ai_portfolio
+                      claims: 1
+                      valueLost: 20400000
+                      name: AI Portfolio Manager
+                  recentClaims: []
+                  trends:
+                    claimsLast30Days: 8
+                    claimsLast7Days: 3
+                    avgLossPerClaim: 2366208
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/claims:
     get:
-      summary: List Claims
+      summary: List claims
+      description: Returns paginated list of claims. Requires read permission.
+      operationId: listClaims
+      security:
+        - bearerAuth: []
       parameters:
         - name: limit
           in: query
           schema:
             type: integer
             default: 50
+            maximum: 100
+          description: Number of results per page
         - name: offset
           in: query
           schema:
             type: integer
             default: 0
-        - name: id
+          description: Number of results to skip
+        - name: search
           in: query
-          description: Get specific claim by ID
           schema:
             type: string
+          description: Search term to filter claims
       responses:
         '200':
           description: List of claims
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
-      summary: Submit a Claim
+      summary: Submit a claim
+      description: Submit a new agent failure claim. Requires write permission.
+      operationId: submitClaim
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - agentId
-                - claimType
-                - category
-                - amountLost
-                - title
-                - description
-              properties:
-                agentId:
-                  type: string
-                  description: Unique identifier for the agent
-                agentName:
-                  type: string
-                  description: Human-readable agent name
-                developer:
-                  type: string
-                  description: Agent developer/company
-                claimType:
-                  type: string
-                  enum: [loss, error, breach, fraud, security, unknown]
-                category:
-                  type: string
-                  enum: [trading, payment, security, execution, data, compliance, other]
-                amountLost:
-                  type: number
-                  description: Amount lost in USD
-                assetType:
-                  type: string
-                  description: Asset type (ETH, USDC, etc.)
-                chain:
-                  type: string
-                  description: Blockchain (ethereum, solana, etc.)
-                txHash:
-                  type: string
-                  description: Transaction hash if on-chain
-                title:
-                  type: string
-                  maxLength: 200
-                description:
-                  type: string
-                  maxLength: 5000
-                platform:
-                  type: string
-                  description: Platform where incident occurred
+              $ref: '#/components/schemas/SubmitClaimRequest'
             example:
-              agentId: "my_agent_001"
-              agentName: "My Trading Agent"
-              claimType: "loss"
-              category: "trading"
-              amountLost: 5000
-              assetType: "ETH"
-              chain: "ethereum"
-              title: "Wrong trade execution"
-              description: "Agent executed wrong trade direction due to signal misinterpretation"
-              platform: "Uniswap"
+              agentId: agent_001
+              agentName: Trading Bot Alpha
+              claimType: loss
+              category: trading
+              amountLost: 50000
+              title: Wrong trade execution
+              description: Agent misread market signal and executed wrong trade direction
+              chain: ethereum
+              platform: Uniswap
       responses:
         '200':
-          description: Claim submitted
+          description: Claim submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitClaimResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              example:
+                success: false
+                error: "amountLost must be a non-negative number"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              example:
+                success: false
+                error: "Insufficient permissions - write access required"
+
+  /api/claims/{id}:
+    get:
+      summary: Get claim by ID
+      description: Returns a specific claim by its ID. Requires read permission.
+      operationId: getClaim
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: clm_1707849600_abc123def
+      responses:
+        '200':
+          description: Claim details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimResponse'
+        '404':
+          description: Claim not found
+          content:
+            application/json:
+              example:
+                success: false
+                error: "Claim not found"
+
+  /api/agents/{agentId}/score:
+    get:
+      summary: Get agent risk score
+      description: |
+        Returns the risk score and grade for an agent based on its claims history.
+        
+        ## Risk Score Calculation
+        
+        - Starts at 100 (perfect)
+        - Decreases based on: severity, recency, resolution status
+        - Range: 0-100
+        
+        ## Grades
+        
+        | Grade | Score Range | Meaning |
+        |-------|-------------|---------|
+        | A | 90-100 | Excellent - Minimal/No issues |
+        | B | 80-89 | Good - Some issues, manageable |
+        | C | 60-79 | Moderate - Notable concerns |
+        | D | 40-59 | High Risk - Significant issues |
+        | F | 0-39 | Critical - Avoid |
+        | NR | - | Not Rated (no claims) |
+        
+      operationId: getAgentScore
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: eliza_trader_001
+      responses:
+        '200':
+          description: Agent risk score
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentScoreResponse'
+              example:
+                agentId: eliza_trader_001
+                riskScore: 72.5
+                confidence: 75
+                totalClaims: 2
+                openClaims: 1
+                totalValueLost: 57000
+                grade: B
+                summary: "Good track record. 2 claim(s), $57,000 total loss."
+                lastUpdated: 1707849600000
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/agents/{agentId}/claims:
+    get:
+      summary: Get claims for an agent
+      description: Returns all claims associated with a specific agent. Requires read permission.
+      operationId: getAgentClaims
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: eliza_trader_001
+      responses:
+        '200':
+          description: Agent claims
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/badge/{agentId}.svg:
+    get:
+      summary: Get agent badge
+      description: |
+        Returns an SVG badge showing the agent's AlliGo score and grade.
+        Can be embedded in websites, READMEs, etc.
+        
+        ## Example Usage
+        
+        ```html
+        <img src="https://api.alligo.io/api/badge/eliza_trader_001.svg" />
+        ```
+        
+        ```markdown
+        [![AlliGo](https://api.alligo.io/api/badge/eliza_trader_001.svg)](https://alligo.io/agent/eliza_trader_001)
+        ```
+      operationId: getAgentBadge
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: SVG badge
+          content:
+            image/svg+xml:
+              example: <svg xmlns="http://www.w3.org/2000/svg">...</svg>
+
+  /api/keys:
+    get:
+      summary: List API keys
+      description: List all API keys (masked). Requires admin permission.
+      operationId: listApiKeys
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of API keys
           content:
             application/json:
               example:
                 success: true
-                claimId: "clm_1709500000_abc123"
-                message: "Claim submitted successfully"
-        '400':
-          description: Validation error
-
-  /api/agents/{agentId}/score:
-    get:
-      summary: Get Agent Risk Score
-      parameters:
-        - name: agentId
-          in: path
-          required: true
-          schema:
-            type: string
+                keys:
+                  - key: alligo_live_abc12...xyz9
+                    name: Production Key
+                    tier: enterprise
+                    permissions: admin
+                    createdAt: 1707849600000
+                    active: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Admin access required
+    post:
+      summary: Create API key
+      description: Create a new API key. Requires admin permission.
+      operationId: createApiKey
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Friendly name for the key
+                tier:
+                  type: string
+                  enum: [free, pro, enterprise]
+                  default: free
+                permissions:
+                  type: string
+                  enum: [read, write, admin]
+                  default: read
+            example:
+              name: Development Key
+              tier: pro
+              permissions: write
       responses:
         '200':
-          description: Agent risk assessment
+          description: API key created
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  agentId:
-                    type: string
-                  riskScore:
-                    type: number
-                    minimum: 0
-                    maximum: 100
-                    description: Risk score (higher = safer)
-                  confidence:
-                    type: number
-                    description: Confidence level of the score
-                  grade:
-                    type: string
-                    enum: [A, B, C, D, F, NR]
-                  totalClaims:
-                    type: integer
-                  totalValueLost:
-                    type: number
-                  summary:
-                    type: string
               example:
-                agentId: "eliza_trader_001"
-                riskScore: 65.4
-                confidence: 30
-                grade: "C"
-                totalClaims: 2
-                totalValueLost: 57000
-                summary: "Moderate risk. 2 claim(s) with $57,000 total loss."
-
-  /api/agents/{agentId}/claims:
-    get:
-      summary: Get Claims for Agent
-      parameters:
-        - name: agentId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: List of claims for this agent
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  claims:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Claim'
-                  total:
-                    type: integer
+                success: true
+                key: alligo_live_abcdefghijklmnopqrstuvwxyz
+                name: Development Key
+                tier: pro
+                permissions: write
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: API key from AlliGo dashboard
+
   schemas:
-    Claim:
+    ClaimType:
+      type: string
+      enum: [loss, error, security, breach, fraud, unknown]
+      description: Type of claim
+      
+    ClaimCategory:
+      type: string
+      enum: [trading, payment, security, execution, governance, other]
+      description: Category of the failure
+      
+    Resolution:
+      type: string
+      enum: [pending, resolved, partial, rejected, unrecoverable]
+      description: Resolution status
+      
+    Severity:
+      type: object
+      properties:
+        score:
+          type: integer
+          minimum: 1
+          maximum: 10
+        level:
+          type: string
+          enum: [low, medium, high, critical]
+        factors:
+          type: array
+          items:
+            type: string
+            
+    AgentClaim:
       type: object
       properties:
         id:
           type: string
+          example: clm_1707849600_abc123def
         agentId:
           type: string
+          example: eliza_trader_001
         agentName:
           type: string
+          example: Eliza Trading Agent
+        developer:
+          type: string
+          example: Eliza Labs
         claimType:
-          type: string
-          enum: [loss, error, breach, fraud, security, unknown]
+          $ref: '#/components/schemas/ClaimType'
         category:
-          type: string
+          $ref: '#/components/schemas/ClaimCategory'
+        severity:
+          $ref: '#/components/schemas/Severity'
         amountLost:
           type: number
+          example: 50000
         assetType:
           type: string
+          example: USDC
         chain:
           type: string
-        timestamp:
-          type: number
+          example: ethereum
         title:
           type: string
+          example: Wrong trade execution
         description:
           type: string
-        resolution:
+        rootCause:
           type: string
-          enum: [pending, resolved, partial, disputed, unrecoverable, rejected]
+        resolution:
+          $ref: '#/components/schemas/Resolution'
         verified:
           type: boolean
+        timestamp:
+          type: integer
+          description: Unix timestamp in milliseconds
         platform:
           type: string
+
+    SubmitClaimRequest:
+      type: object
+      required:
+        - agentId
+        - claimType
+        - category
+        - amountLost
+        - title
+        - description
+      properties:
+        agentId:
+          type: string
+          description: Unique identifier for the agent
+        agentName:
+          type: string
+          description: Human-readable name
+        developer:
+          type: string
+          description: Developer/company that built the agent
+        claimType:
+          $ref: '#/components/schemas/ClaimType'
+        category:
+          $ref: '#/components/schemas/ClaimCategory'
+        amountLost:
+          type: number
+          minimum: 0
+          description: Amount lost in USD
+        assetType:
+          type: string
+          description: Type of asset (ETH, USDC, etc.)
+        assetAmount:
+          type: number
+          description: Original amount in asset terms
+        chain:
+          type: string
+          description: Blockchain (ethereum, solana, etc.)
+        txHash:
+          type: string
+          description: Transaction hash if on-chain
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        rootCause:
+          type: string
+        counterparty:
+          type: string
+          description: Other agent/address involved
+        evidence:
+          type: array
+          items:
+            type: string
+          description: Links to evidence
+        platform:
+          type: string
+          description: Platform where incident occurred
+        agentVersion:
+          type: string
+
+    SubmitClaimResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        claimId:
+          type: string
+        message:
+          type: string
+
+    AgentScoreResponse:
+      type: object
+      properties:
+        agentId:
+          type: string
+        riskScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+        totalClaims:
+          type: integer
+        openClaims:
+          type: integer
+        totalValueLost:
+          type: number
+        grade:
+          type: string
+          enum: [A, B, C, D, F, NR]
+        summary:
+          type: string
+        lastUpdated:
+          type: integer
+
+    ClaimsResponse:
+      type: object
+      properties:
+        claims:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentClaim'
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+
+    ClaimResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        claim:
+          $ref: '#/components/schemas/AgentClaim'
+
+    StatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        stats:
+          type: object
+          properties:
+            totalClaims:
+              type: integer
+            totalValueLost:
+              type: number
+            totalValueRecovered:
+              type: number
+            recoveryRate:
+              type: number
+            claimsByType:
+              type: object
+              additionalProperties:
+                type: integer
+            claimsByCategory:
+              type: object
+              additionalProperties:
+                type: integer
+            claimsByChain:
+              type: object
+              additionalProperties:
+                type: integer
+            topAgents:
+              type: array
+              items:
+                type: object
+                properties:
+                  agentId:
+                    type: string
+                  claims:
+                    type: integer
+                  valueLost:
+                    type: number
+                  name:
+                    type: string
+            recentClaims:
+              type: array
+              items:
+                $ref: '#/components/schemas/AgentClaim'
+            trends:
+              type: object
+              properties:
+                claimsLast30Days:
+                  type: integer
+                claimsLast7Days:
+                  type: integer
+                avgLossPerClaim:
+                  type: number
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          example:
+            success: false
+            error: "Unauthorized - valid API key required"
+            
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          example:
+            success: false
+            error: "Rate limit exceeded"
+            resetIn: 45
+
+x-internal:
+  - /api/keys

@@ -22,15 +22,18 @@ Server runs at **http://localhost:3399**
 
 ## 📊 What's Tracked
 
-Currently tracking **$47M+** across **12+ real incidents**:
+Currently tracking **$56M+** across **22+ real incidents**:
 
 | Agent | Amount Lost | Cause |
 |-------|-------------|-------|
 | Arup Finance Agent | $25M | AI deepfake fraud |
 | AI Portfolio Manager | $20.4M | No stop-losses |
+| KiloEx Trading Agent | $7M | Flash loan exploit |
+| Griffin AI DeFi Agent | $3M | Smart contract exploit |
+| Makina Yield Optimizer | $4.1M | Flash loan attack |
+| Credix Lending Agent | $4.5M | Admin key compromise |
 | Lobstar Wilde | $250K | State management failure |
-| Alpha Arbitrage | $230K | Flash loan exploit |
-| Bridge Router Agent | $340K | Timeout failure |
+| Gold Protocol Agent | $2M | Launch-day hack |
 
 ## 🛡️ API Endpoints
 
@@ -42,6 +45,7 @@ Currently tracking **$47M+** across **12+ real incidents**:
 | `GET /api/agents/:id/claims` | Read | Agent claim history |
 | `POST /api/claims` | Write | Submit new claim |
 | `GET /health` | None | Health check |
+| `GET /api/badge/:id.svg` | None | Agent trust badge |
 
 ### Authentication
 
@@ -49,6 +53,10 @@ Include API key in Authorization header:
 ```bash
 curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:3399/api/stats
 ```
+
+**Default dev keys:**
+- Admin: `alligo_admin_dev_key`
+- Read: `alligo_read_dev_key`
 
 **Default dev keys:**
 - Admin: `alligo_admin_dev_key`
