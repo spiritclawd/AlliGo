@@ -39,6 +39,7 @@ import {
   SECURITY_HEADERS,
 } from "../security/middleware";
 import { config, validateConfig, printConfig } from "../config";
+import { generateBadge, generateCompactBadge, generateBannerBadge } from "../badge/index";
 
 // ==================== RISK SCORING ====================
 
@@ -411,6 +412,118 @@ function handleListApiKeys(req: Request): Response {
   return json({ success: true, keys: masked });
 }
 
+// ==================== PUBLIC ENDPOINTS ====================
+
+function handleGetPublicStats(): Response {
+  const claims = getAllClaims(1000);
+  const totalValueLost = claims.reduce((sum, c) => sum + c.amountLost, 0);
+  
+  return json({
+    success: true,
+    stats: {
+      totalClaims: claims.length,
+      totalValueLost,
+      claimsByType: claims.reduce((acc, c) => {
+        acc[c.claimType] = (acc[c.claimType] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+      claimsByCategory: claims.reduce((acc, c) => {
+        acc[c.category] = (acc[c.category] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+      topAgents: getTopAgents(claims, 5),
+    },
+  });
+}
+
+function handleGetPublicAgentScore(agentId: string): Response {
+  const claims = getClaimsByAgent(decodeURIComponent(agentId));
+  const { score, confidence } = calculateRiskScore(claims);
+  const grade = gradeFromScore(score);
+  const totalValueLost = claims.reduce((sum, c) => sum + c.amountLost, 0);
+  
+  return json({
+    agentId: decodeURIComponent(agentId),
+    riskScore: score,
+    confidence,
+    totalClaims: claims.length,
+    totalValueLost,
+    grade: claims.length === 0 ? "NR" : grade,
+    lastUpdated: Date.now(),
+  });
+}
+
+function getTopAgents(claims: AgentClaim[], limit: number) {
+  const agentMap = new Map<string, { claims: number; valueLost: number; name?: string }>();
+  for (const claim of claims) {
+    const existing = agentMap.get(claim.agentId) || { claims: 0, valueLost: 0 };
+    agentMap.set(claim.agentId, {
+      claims: existing.claims + 1,
+      valueLost: existing.valueLost + claim.amountLost,
+      name: claim.agentName,
+    });
+  }
+  
+  return Array.from(agentMap.entries())
+    .map(([agentId, data]) => ({ agentId, ...data }))
+    .sort((a, b) => b.valueLost - a.valueLost)
+    .slice(0, limit);
+}
+
+// ==================== BADGE ENDPOINT ====================
+
+function handleGetBadge(agentId: string, type: string): Response {
+  const claims = getClaimsByAgent(decodeURIComponent(agentId));
+  const { score } = calculateRiskScore(claims);
+  const grade = gradeFromScore(score);
+  
+  let svg: string;
+  
+  const badgeConfig = {
+    agentId: decodeURIComponent(agentId),
+    score,
+    grade: claims.length === 0 ? "NR" : grade,
+    claims: claims.length,
+  };
+  
+  switch (type) {
+    case "compact":
+      svg = generateCompactBadge(badgeConfig);
+      break;
+    case "banner":
+      const totalValueLost = claims.reduce((sum, c) => sum + c.amountLost, 0);
+      svg = generateBannerBadge({ ...badgeConfig, totalValueLost });
+      break;
+    default:
+      svg = generateBadge(badgeConfig);
+  }
+  
+  return new Response(svg, {
+    headers: {
+      "Content-Type": "image/svg+xml",
+      "Cache-Control": "public, max-age=300", // 5 minute cache
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
+}
+
+// ==================== LEGAL PAGES ====================
+
+function serveLegalPage(page: "terms" | "privacy"): Response {
+  try {
+    const filePath = join(process.cwd(), "public", "legal", `${page}.html`);
+    if (existsSync(filePath)) {
+      const html = readFileSync(filePath, "utf-8");
+      return new Response(html, {
+        headers: { "Content-Type": "text/html" },
+      });
+    }
+  } catch (e) {
+    console.error("Error serving legal page:", e);
+  }
+  return error("Page not found", 404);
+}
+
 // ==================== ROUTER ====================
 
 async function handleRequest(req: Request): Promise<Response> {
@@ -449,11 +562,16 @@ async function handleRequest(req: Request): Promise<Response> {
         "GET /api/agents/:id/claims": "Get claims for an agent",
         "GET /api/agents/:id/score": "Get risk score for an agent",
         "GET /api/stats": "Get global statistics",
+        "GET /api/public/stats": "Public statistics (no auth)",
+        "GET /api/public/agents/:id/score": "Public agent score (no auth)",
+        "GET /api/badge/:id.svg": "Get agent badge (no auth)",
         "POST /api/keys": "Create new API key (admin)",
         "GET /api/keys": "List API keys (admin)",
         "GET /health": "Health check",
+        "GET /legal/terms": "Terms of Service",
+        "GET /legal/privacy": "Privacy Policy",
       },
-      auth: "Bearer <API_KEY> required for most endpoints",
+      auth: "Bearer <API_KEY> required for protected endpoints",
     });
   }
   
@@ -486,6 +604,23 @@ async function handleRequest(req: Request): Promise<Response> {
   if (path === "/api/stats" && method === "GET") return handleGetStats(req);
   if (path === "/api/keys" && method === "GET") return handleListApiKeys(req);
   if (path === "/api/keys" && method === "POST") return handleCreateApiKey(req);
+  
+  // Public endpoints (no auth required)
+  if (path === "/api/public/stats" && method === "GET") return handleGetPublicStats();
+  const publicAgentMatch = path.match(/^\/api\/public\/agents\/([^/]+)\/score$/);
+  if (publicAgentMatch) {
+    return handleGetPublicAgentScore(publicAgentMatch[1]);
+  }
+  
+  // Badge endpoint (no auth required)
+  const badgeMatch = path.match(/^\/api\/badge\/([^/]+)\.svg$/);
+  if (badgeMatch && method === "GET") {
+    return handleGetBadge(badgeMatch[1], url.searchParams.get("type") || "default");
+  }
+  
+  // Legal pages
+  if (path === "/legal/terms" && method === "GET") return serveLegalPage("terms");
+  if (path === "/legal/privacy" && method === "GET") return serveLegalPage("privacy");
   
   return error("Not found", 404);
 }

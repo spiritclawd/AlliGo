@@ -1,0 +1,19 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# API endpoints
+Allow: /api/public/
+Allow: /api/badge/
+Allow: /health
+
+# Protected endpoints (no indexing)
+Disallow: /api/claims
+Disallow: /api/keys
+Disallow: /api/agents/*/claims
+
+# Legal pages
+Allow: /legal/
+
+# Sitemap
+Sitemap: https://alligo.io/sitemap.xml

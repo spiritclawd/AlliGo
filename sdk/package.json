@@ -1,0 +1,42 @@
+{
+  "name": "@alligo/sdk",
+  "version": "0.1.0",
+  "description": "Official JavaScript SDK for AlliGo - The Credit Bureau for AI Agents",
+  "main": "index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.js",
+      "types": "./index.d.ts"
+    }
+  },
+  "keywords": [
+    "alligo",
+    "ai-agents",
+    "risk",
+    "credit-bureau",
+    "sdk",
+    "api"
+  ],
+  "author": "AlliGo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spiritclawd/AlliGo.git",
+    "directory": "sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/spiritclawd/AlliGo/issues"
+  },
+  "homepage": "https://alligo.io",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=16"
+  }
+}
