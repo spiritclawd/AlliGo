@@ -234,3 +234,73 @@ docker run -p 3399:3399 -v alligo-data:/app/data alligo
 3. Add more data ingestion sources
 4. Build browser extension for agent risk display
 5. Partnership outreach (Armilla, Daydreams)
+
+---
+
+## Browser Extension Added
+
+### Chrome Extension for AI Agent Risk Display
+Created a full browser extension that integrates AlliGo risk scoring into Twitter/X:
+
+**Files:**
+- `extension/manifest.json` - Extension configuration (Manifest V3)
+- `extension/popup.html` - Main popup UI
+- `extension/popup.js` - Popup logic
+- `extension/background.js` - Service worker for API calls
+- `extension/content.js` - Twitter content script
+- `extension/content.css` - Styling for risk badges
+- `extension/options.html` - Settings page
+- `extension/options.js` - Settings logic
+
+**Features:**
+- Risk grade badges (A-F) next to AI agent mentions on Twitter
+- Quick agent lookup in popup
+- Configurable API key and settings
+- Real-time risk score display
+- Desktop notifications for new claims
+
+**Installation:**
+1. Open Chrome → chrome://extensions
+2. Enable "Developer mode"
+3. Click "Load unpacked" → select `/extension` folder
+4. Configure API key in extension settings
+
+---
+
+## API Integration Guide Added
+
+### Developer Documentation (`docs/API_INTEGRATION.md`)
+Comprehensive guide for integrating AlliGo into applications:
+
+**Contents:**
+- Quick start guide
+- Authentication methods
+- All API endpoints documented
+- JavaScript/TypeScript SDK example
+- Python SDK example
+- Integration patterns (pre-transaction check, monitoring, insurance)
+- Error handling best practices
+- Rate limit information
+
+**Code Examples:**
+```javascript
+const client = new AlliGoClient('your_api_key');
+const score = await client.getAgentScore('eliza_trader_001');
+
+if (score.grade === 'F') {
+  throw new Error('High risk agent - transaction blocked');
+}
+```
+
+---
+
+## Current Project Stats
+
+| Metric | Value |
+|--------|-------|
+| Claims tracked | 12 |
+| Value lost | $47M+ |
+| Code files | 25+ |
+| Documentation | 5 docs |
+| Extension files | 8 files |
+| Test coverage | Basic unit tests |
