@@ -51,9 +51,21 @@ export interface Config {
   // External Services
   braveApiKey?: string;
 
+  // Telegram
+  telegramBotToken?: string;
+  telegramChannelId?: string;
+
+  // Stripe Configuration
+  stripeSecretKey?: string;
+  stripeWebhookSecret?: string;
+  stripeProPriceId?: string;
+  stripeEnterprisePriceId?: string;
+  stripeBaseUrl: string;
+
   // Feature Flags
   enableIngestion: boolean;
   enableDashboard: boolean;
+  enableTelegram: boolean;
 }
 
 function getEnv(key: string, defaultValue: string): string {
@@ -92,9 +104,21 @@ export const config: Config = {
   // External Services
   braveApiKey: getEnv("BRAVE_API_KEY", "") || undefined,
 
+  // Telegram
+  telegramBotToken: getEnv("TELEGRAM_BOT_TOKEN", "") || undefined,
+  telegramChannelId: getEnv("TELEGRAM_CHANNEL_ID", "") || undefined,
+
+  // Stripe Configuration
+  stripeSecretKey: getEnv("STRIPE_SECRET_KEY", "") || undefined,
+  stripeWebhookSecret: getEnv("STRIPE_WEBHOOK_SECRET", "") || undefined,
+  stripeProPriceId: getEnv("STRIPE_PRO_PRICE_ID", "") || undefined,
+  stripeEnterprisePriceId: getEnv("STRIPE_ENTERPRISE_PRICE_ID", "") || undefined,
+  stripeBaseUrl: getEnv("STRIPE_BASE_URL", `http://localhost:${getEnvNumber("PORT", 3399)}`),
+
   // Feature Flags
   enableIngestion: getEnvBool("ENABLE_INGESTION", true),
   enableDashboard: getEnvBool("ENABLE_DASHBOARD", true),
+  enableTelegram: getEnvBool("ENABLE_TELEGRAM", true),
 };
 
 // Ensure database directory exists
@@ -138,6 +162,8 @@ export function printConfig(): void {
   console.log(`   Rate Limit: ${config.rateLimitMaxRequests} req/${config.rateLimitWindowMs}ms`);
   console.log(`   Admin Key: ${config.adminApiKey ? "✓ configured" : "✗ not set"}`);
   console.log(`   Dashboard: ${config.enableDashboard ? "✓ enabled" : "✗ disabled"}`);
+  console.log(`   Telegram: ${config.telegramBotToken && config.telegramChannelId ? "✓ configured" : "✗ not set"}`);
+  console.log(`   Stripe: ${config.stripeSecretKey ? "✓ configured" : "✗ not set"}`);
   console.log("");
 }
 

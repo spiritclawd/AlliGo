@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AlliGo - The Credit Bureau for AI Agents</title>
+  <title>AlliGo - The Credit Bureau for AI Agents | Check Agent Risk Before You Trust</title>
+  <meta name="description" content="Before trusting an AI agent with your money, check their AlliGo score. The first reputation system tracking $72M+ in AI agent failures.">
+  <meta property="og:title" content="AlliGo - The Credit Bureau for AI Agents">
+  <meta property="og:description" content="AI agents lost $72M+ in 2025. Check their risk score before you trust them.">
+  <meta property="og:type" content="website">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -15,17 +19,15 @@
       --text-primary: #ffffff;
       --text-secondary: #888888;
       --accent: #00ff88;
+      --accent-hover: #00cc6a;
       --accent-dim: rgba(0, 255, 136, 0.1);
       --danger: #ff4444;
       --warning: #ffaa00;
+      --success: #00ff88;
       --border: #333333;
     }
     
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -41,7 +43,7 @@
       left: 0;
       right: 0;
       padding: 1rem 2rem;
-      background: rgba(10, 10, 10, 0.9);
+      background: rgba(10, 10, 10, 0.95);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
       z-index: 100;
@@ -58,9 +60,7 @@
       gap: 0.5rem;
     }
     
-    .logo span {
-      color: var(--accent);
-    }
+    .logo span { color: var(--accent); }
     
     .nav-links {
       display: flex;
@@ -75,9 +75,7 @@
       transition: color 0.2s;
     }
     
-    .nav-links a:hover {
-      color: var(--accent);
-    }
+    .nav-links a:hover { color: var(--accent); }
     
     .nav-cta {
       background: var(--accent);
@@ -94,7 +92,7 @@
       box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
     }
     
-    /* Hero Section */
+    /* Hero */
     .hero {
       min-height: 100vh;
       display: flex;
@@ -119,6 +117,17 @@
       pointer-events: none;
     }
     
+    .hero-badge {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+    
     .hero h1 {
       font-size: 4rem;
       font-weight: 800;
@@ -126,11 +135,9 @@
       line-height: 1.1;
     }
     
-    .hero h1 .highlight {
-      color: var(--accent);
-    }
+    .hero h1 .highlight { color: var(--accent); }
     
-    .hero p {
+    .hero-subtitle {
       font-size: 1.25rem;
       color: var(--text-secondary);
       max-width: 600px;
@@ -147,23 +154,154 @@
       border: 1px solid var(--border);
     }
     
-    .stat {
+    .stat { text-align: center; }
+    .stat-value { font-size: 2.5rem; font-weight: 800; color: var(--accent); }
+    .stat-label { font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem; }
+    
+    /* Email Capture Form */
+    .email-form {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 1.5rem;
+      max-width: 500px;
+    }
+    
+    .email-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 1rem 1.25rem;
+      background: var(--bg-primary);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    
+    .email-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
+    .email-input::placeholder {
+      color: var(--text-secondary);
+    }
+    
+    .email-input.error {
+      border-color: var(--danger);
+    }
+    
+    .email-input.success {
+      border-color: var(--success);
+    }
+    
+    /* Form Messages */
+    .form-message {
+      width: 100%;
+      text-align: center;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      display: none;
+    }
+    
+    .form-message.success {
+      display: block;
+      background: rgba(0, 255, 136, 0.1);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+    
+    .form-message.error {
+      display: block;
+      background: rgba(255, 68, 68, 0.1);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+    
+    /* CTA Box - The Key Conversion Element */
+    .cta-box {
+      background: linear-gradient(135deg, var(--bg-card) 0%, rgba(0, 255, 136, 0.05) 100%);
+      border: 2px solid var(--accent);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-top: 2rem;
+      max-width: 500px;
       text-align: center;
     }
     
-    .stat-value {
-      font-size: 2.5rem;
+    .cta-box h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .cta-box p {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+    
+    .cta-box .price {
+      font-size: 2rem;
       font-weight: 800;
       color: var(--accent);
     }
     
-    .stat-label {
-      font-size: 0.875rem;
+    .cta-box .price span {
+      font-size: 1rem;
       color: var(--text-secondary);
-      margin-top: 0.25rem;
+      font-weight: 400;
     }
     
-    /* Problem Section */
+    /* Buttons */
+    .btn {
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      border: none;
+      font-size: 1rem;
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+      background: var(--accent-hover);
+    }
+    
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover { border-color: var(--accent); }
+    
+    .btn-large {
+      padding: 1.25rem 3rem;
+      font-size: 1.125rem;
+    }
+    
+    .btn-block { width: 100%; justify-content: center; }
+    
+    /* Sections */
     .section {
       padding: 6rem 2rem;
       max-width: 1200px;
@@ -184,6 +322,7 @@
       margin: 0 auto 3rem;
     }
     
+    /* Problem */
     .problem-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -203,26 +342,12 @@
       border-color: var(--danger);
     }
     
-    .problem-card .icon {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
+    .problem-card .icon { font-size: 2rem; margin-bottom: 1rem; }
+    .problem-card h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .problem-card p { color: var(--text-secondary); font-size: 0.875rem; }
     
-    .problem-card h3 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-    
-    .problem-card p {
-      color: var(--text-secondary);
-      font-size: 0.875rem;
-    }
-    
-    /* Solution Section */
-    .solution {
-      background: var(--bg-secondary);
-    }
+    /* Solution */
+    .solution { background: var(--bg-secondary); }
     
     .flow-diagram {
       display: flex;
@@ -246,12 +371,8 @@
       background: var(--accent-dim);
     }
     
-    .flow-arrow {
-      color: var(--text-secondary);
-      font-size: 1.5rem;
-    }
+    .flow-arrow { color: var(--text-secondary); font-size: 1.5rem; }
     
-    /* Features Grid */
     .features-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -278,16 +399,8 @@
       font-size: 1.5rem;
     }
     
-    .feature h3 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-    
-    .feature p {
-      color: var(--text-secondary);
-      font-size: 0.875rem;
-    }
+    .feature h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .feature p { color: var(--text-secondary); font-size: 0.875rem; }
     
     /* API Preview */
     .api-preview {
@@ -310,65 +423,167 @@
     .api-code .number { color: #ff6b6b; }
     .api-code .key { color: #64b5f6; }
     
-    /* Badge Section */
-    .badges-section {
+    /* How It Works */
+    .how-it-works {
       background: var(--bg-secondary);
+      padding: 6rem 2rem;
     }
     
-    .badge-showcase {
-      display: flex;
-      justify-content: center;
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 2rem;
-      flex-wrap: wrap;
-      margin-top: 3rem;
+      max-width: 1000px;
+      margin: 3rem auto 0;
     }
     
-    .badge-item {
+    .step {
       text-align: center;
+      padding: 2rem;
     }
     
-    .badge-img {
-      width: 200px;
+    .step-number {
+      width: 60px;
       height: 60px;
-      background: var(--bg-card);
-      border-radius: 8px;
+      background: var(--accent);
+      color: var(--bg-primary);
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-      border: 1px solid var(--border);
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin: 0 auto 1rem;
     }
     
-    .badge-img.certified {
-      border-color: var(--accent);
-      background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 255, 136, 0.05));
-    }
+    .step h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .step p { color: var(--text-secondary); font-size: 0.875rem; }
     
-    .badge-img.warning {
-      border-color: var(--warning);
-      background: linear-gradient(135deg, rgba(255, 170, 0, 0.1), rgba(255, 170, 0, 0.05));
-    }
-    
-    .badge-img.danger {
-      border-color: var(--danger);
-      background: linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 68, 68, 0.05));
-    }
-    
-    /* CTA Section */
-    .cta {
-      text-align: center;
+    /* Pricing - The Money Section */
+    .pricing {
+      background: var(--bg-primary);
       padding: 6rem 2rem;
-      background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
     }
     
-    .cta h2 {
+    .pricing-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    
+    .pricing-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    
+    .pricing-card:hover { transform: translateY(-4px); }
+    
+    .pricing-card.featured {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, rgba(0, 255, 136, 0.05) 0%, var(--bg-card) 100%);
+    }
+    
+    .pricing-card.featured::before {
+      content: 'MOST POPULAR';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: var(--bg-primary);
+      padding: 0.25rem 1rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    
+    .pricing-tier { font-size: 0.875rem; color: var(--accent); font-weight: 600; margin-bottom: 0.5rem; }
+    .pricing-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .pricing-price { font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .pricing-price span { font-size: 1rem; color: var(--text-secondary); font-weight: 400; }
+    .pricing-desc { color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem; }
+    
+    .pricing-features {
+      list-style: none;
+      text-align: left;
+      margin-bottom: 2rem;
+    }
+    
+    .pricing-features li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .pricing-features li:last-child { border-bottom: none; }
+    .pricing-features .check { color: var(--accent); }
+    .pricing-features .x { color: var(--text-secondary); }
+    
+    /* Waitlist Position */
+    .waitlist-position {
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    
+    .waitlist-position .position {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    
+    /* Social Proof */
+    .social-proof {
+      background: var(--bg-secondary);
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+    
+    .logos {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+      opacity: 0.5;
+    }
+    
+    .logo-item {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    /* Final CTA */
+    .final-cta {
+      background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      padding: 6rem 2rem;
+      text-align: center;
+    }
+    
+    .final-cta h2 {
       font-size: 2.5rem;
       font-weight: 800;
       margin-bottom: 1rem;
     }
     
-    .cta p {
+    .final-cta p {
       color: var(--text-secondary);
       margin-bottom: 2rem;
       max-width: 500px;
@@ -376,42 +591,17 @@
       margin-right: auto;
     }
     
-    .cta-buttons {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    
-    .btn {
-      padding: 1rem 2rem;
+    .guarantee {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: var(--bg-card);
       border-radius: 8px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: transform 0.2s, box-shadow 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
+      display: inline-block;
     }
     
-    .btn-primary {
-      background: var(--accent);
-      color: var(--bg-primary);
-    }
-    
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
-    }
-    
-    .btn-secondary {
-      background: transparent;
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-    }
-    
-    .btn-secondary:hover {
-      border-color: var(--accent);
+    .guarantee p {
+      margin: 0;
+      font-size: 0.875rem;
     }
     
     /* Footer */
@@ -434,21 +624,16 @@
       font-size: 0.875rem;
     }
     
-    .footer-links a:hover {
-      color: var(--accent);
-    }
+    .footer-links a:hover { color: var(--accent); }
+    .copyright { color: var(--text-secondary); font-size: 0.875rem; }
     
-    .copyright {
-      color: var(--text-secondary);
-      font-size: 0.875rem;
-    }
-    
-    /* Responsive */
     @media (max-width: 768px) {
       .hero h1 { font-size: 2.5rem; }
       .hero-stats { flex-direction: column; gap: 1.5rem; }
       .nav-links { display: none; }
       .section { padding: 4rem 1rem; }
+      .email-form { flex-direction: column; }
+      .email-form .btn { width: 100%; }
     }
   </style>
 </head>
@@ -458,19 +643,32 @@
     <div class="logo">🛡️ Alli<span>Go</span></div>
     <ul class="nav-links">
       <li><a href="#problem">Problem</a></li>
-      <li><a href="#solution">Solution</a></li>
-      <li><a href="#api">API</a></li>
-      <li><a href="#badges">Badges</a></li>
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="https://t.me/alligo_alerts">Telegram</a></li>
       <li><a href="https://github.com/spiritclawd/AlliGo">GitHub</a></li>
     </ul>
-    <a href="#cta" class="nav-cta">Get Started</a>
+    <a href="#pricing" class="nav-cta">Get API Access</a>
   </nav>
 
   <!-- Hero Section -->
   <section class="hero">
-    <h1>The <span class="highlight">Credit Bureau</span><br>for AI Agents</h1>
-    <p>When agents fail, lose money, or cause damage — there's no record. Until now. Track AI agent failures, quantify risk, and build trust.</p>
-    <a href="#cta" class="btn btn-primary">Start Tracking →</a>
+    <div class="hero-badge">🚀 NOW LIVE — 22+ Agents Tracked</div>
+    <h1>Check an Agent's<br><span class="highlight">Risk Score</span> Before You Trust</h1>
+    <p class="hero-subtitle">AI agents lost $72M+ in 2025. Before trusting one with your money, check their AlliGo score. Like a credit score, but for AI agents.</p>
+    
+    <!-- Hero Email Capture Form -->
+    <form class="email-form" id="hero-form" onsubmit="return handleHeroSubmit(event)">
+      <input type="email" class="email-input" name="email" placeholder="Enter your email" required>
+      <button type="submit" class="btn btn-primary btn-large">Get Early Access</button>
+      <input type="hidden" name="source" value="hero_section">
+      <div class="form-message" id="hero-message"></div>
+    </form>
+    
+    <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; justify-content: center;">
+      <a href="#pricing" class="btn btn-secondary btn-large">View Pricing</a>
+      <a href="/api/public/stats" class="btn btn-secondary btn-large">View Live Data</a>
+    </div>
     
     <div class="hero-stats">
       <div class="stat">
@@ -478,11 +676,11 @@
         <div class="stat-label">Claims Tracked</div>
       </div>
       <div class="stat">
-        <div class="stat-value" id="totalValue">$56M+</div>
+        <div class="stat-value" id="totalValue">$72M+</div>
         <div class="stat-label">Value Lost</div>
       </div>
       <div class="stat">
-        <div class="stat-value" id="agentsTracked">18+</div>
+        <div class="stat-value" id="agentsTracked">22+</div>
         <div class="stat-label">Agents Monitored</div>
       </div>
     </div>
@@ -490,145 +688,236 @@
 
   <!-- Problem Section -->
   <section class="section" id="problem">
-    <h2 class="section-title">The Problem</h2>
-    <p class="section-subtitle">Every day, autonomous agents make mistakes that cost real money. But this data vanishes into the void.</p>
+    <h2 class="section-title">The Problem: Flying Blind</h2>
+    <p class="section-subtitle">When AI agents fail, lose money, or cause damage — there's no record. You're trusting them with zero data.</p>
     
     <div class="problem-grid">
       <div class="problem-card">
         <div class="icon">💸</div>
-        <h3>$50K Arbitrage Loss</h3>
-        <p>Your agent loses money in a failed trade → No record</p>
+        <h3>$250K Lobstar Wilde</h3>
+        <p>OpenAI dev's agent sent 52M tokens to a stranger. State management failure. No record until we logged it.</p>
       </div>
       <div class="problem-card">
         <div class="icon">🔓</div>
-        <h3>Wallet Drained</h3>
-        <p>Your agent's wallet gets hacked → No record</p>
+        <h3>$25M Arup Deepfake</h3>
+        <p>AI deepfakes impersonated CFO, authorized $25M transfer. No verification system caught it.</p>
       </div>
       <div class="problem-card">
-        <div class="icon">📤</div>
-        <h3>Wrong Transfer</h3>
-        <p>Agent sends funds to wrong address → No record</p>
+        <div class="icon">📉</div>
+        <h3>$20M Portfolio Collapse</h3>
+        <p>AI-managed portfolio lost $20.4M on agent tokens. No stop-losses, no position limits.</p>
       </div>
       <div class="problem-card">
-        <div class="icon">🤝</div>
-        <h3>Contract Breach</h3>
-        <p>Another agent fails to deliver → No record</p>
+        <div class="icon">⚡</div>
+        <h3>$7M KiloEx Exploit</h3>
+        <p>Flash loan exploit drained $7M. Oracle manipulation. Common pattern, no centralized tracking.</p>
       </div>
     </div>
+    
+    <p style="text-align: center; margin-top: 2rem; color: var(--text-secondary);">
+      <strong style="color: var(--danger);">The pattern:</strong> Every failure could have been prevented with better information.
+    </p>
   </section>
 
   <!-- Solution Section -->
   <section class="section solution" id="solution">
-    <h2 class="section-title">The Solution</h2>
-    <p class="section-subtitle">AlliGo is the first Agent Claims Registry — a database of agent failures, losses, and disputes.</p>
+    <h2 class="section-title">The Solution: AlliGo Risk Scores</h2>
+    <p class="section-subtitle">The first Agent Claims Registry — real failure data, real risk scores, real protection.</p>
     
     <div class="flow-diagram">
       <div class="flow-step">Agent Fails</div>
       <div class="flow-arrow">→</div>
       <div class="flow-step active">Claim Logged</div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step active">History Preserved</div>
+      <div class="flow-step active">Score Calculated</div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step active">Risk Quantified</div>
+      <div class="flow-step active">You Get Alerted</div>
     </div>
     
     <div class="features-grid">
       <div class="feature">
         <div class="feature-icon">📊</div>
-        <h3>Risk Scores</h3>
-        <p>Every agent gets a 0-100 risk score and A-F grade based on their claims history. Make informed decisions before trusting an agent.</p>
+        <h3>Risk Scores (0-100)</h3>
+        <p>Every agent gets a risk score and grade (A-F). Check before you transact. 3-second API call.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">🔍</div>
-        <h3>Claim Registry</h3>
-        <p>Detailed records of failures including amount lost, root cause, resolution status, and verification level. Transparency builds trust.</p>
+        <h3>Claims Database</h3>
+        <p>Verified incident records: amount lost, root cause, resolution. Real data from real failures.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">⚡</div>
-        <h3>Real-time API</h3>
-        <p>Integrate AlliGo scores into your platform. Check agent risk before transactions, display badges, or build insurance products.</p>
+        <h3>Real-time Alerts</h3>
+        <p>Telegram alerts when new claims are filed. Get notified before it's too late.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">🏷️</div>
-        <h3>Certified Badges</h3>
-        <p>"AlliGo Certified" badges for agents with clean records. A trust signal that users can verify on-chain.</p>
+        <h3>Trust Badges</h3>
+        <p>"AlliGo Certified" badges for clean agents. Embed in your site, verify via API.</p>
       </div>
     </div>
-  </section>
-
-  <!-- API Section -->
-  <section class="section" id="api">
-    <h2 class="section-title">Simple API</h2>
-    <p class="section-subtitle">Integrate AlliGo into your platform with just a few lines of code.</p>
     
     <div class="api-preview">
-      <pre class="api-code"><span class="comment"># Get agent risk score</span>
-<span class="method">GET</span> /api/agents/<span class="string">eliza_trader_001</span>/score
+      <pre class="api-code"><span class="comment">// Check agent risk in 3 seconds</span>
+<span class="method">GET</span> https://api.alligo.io/agents/<span class="string">eliza_trader_001</span>/score
 
-<span class="comment"># Response</span>
+<span class="comment">// Response</span>
 {
-  <span class="key">"agentId"</span>: <span class="string">"eliza_trader_001"</span>,
   <span class="key">"riskScore"</span>: <span class="number">72.5</span>,
   <span class="key">"grade"</span>: <span class="string">"B"</span>,
   <span class="key">"totalClaims"</span>: <span class="number">2</span>,
   <span class="key">"totalValueLost"</span>: <span class="number">57000</span>,
-  <span class="key">"summary"</span>: <span class="string">"Good track record. 2 claim(s), $57,000 total loss."</span>
+  <span class="key">"summary"</span>: <span class="string">"Good track record. 2 claims, $57K total loss."</span>
 }
 
-<span class="comment"># Submit a claim (requires API key)</span>
-<span class="method">POST</span> /api/claims
-Authorization: Bearer <span class="string">your-api-key</span>
-{
-  <span class="key">"agentId"</span>: <span class="string">"agent_001"</span>,
-  <span class="key">"claimType"</span>: <span class="string">"loss"</span>,
-  <span class="key">"category"</span>: <span class="string">"trading"</span>,
-  <span class="key">"amountLost"</span>: <span class="number">50000</span>,
-  <span class="key">"title"</span>: <span class="string">"Wrong trade execution"</span>,
-  <span class="key">"description"</span>: <span class="string">"Agent misread market signal..."</span>
+<span class="comment">// Block high-risk agents</span>
+if (score.grade === 'F' || score.grade === 'D') {
+  throw new Error(<span class="string">"Agent not trusted. Check AlliGo for details."</span>);
 }</pre>
     </div>
   </section>
 
-  <!-- Badges Section -->
-  <section class="section badges-section" id="badges">
-    <h2 class="section-title">AlliGo Certified Badges</h2>
-    <p class="section-subtitle">Display your agent's trust score with embeddable badges.</p>
+  <!-- How It Works -->
+  <section class="how-it-works" id="how-it-works">
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-subtitle">Integrate in under 5 minutes</p>
     
-    <div class="badge-showcase">
-      <div class="badge-item">
-        <div class="badge-img certified">🛡️ AlliGo Certified A</div>
-        <p style="color: var(--accent);">Score: 90-100</p>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Get API Key</h3>
+        <p>Sign up free. Get instant access to 100 requests/day. No credit card needed.</p>
       </div>
-      <div class="badge-item">
-        <div class="badge-img certified">🛡️ AlliGo Verified B</div>
-        <p style="color: var(--accent);">Score: 80-89</p>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Check Agent Score</h3>
+        <p>One API call. Get risk score, grade, claims history, and summary. 3-second response.</p>
       </div>
-      <div class="badge-item">
-        <div class="badge-img warning">⚠️ AlliGo Monitored C</div>
-        <p style="color: var(--warning);">Score: 60-79</p>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Protect Your Users</h3>
+        <p>Block high-risk agents. Display trust badges. Get alerts on new claims.</p>
       </div>
-      <div class="badge-item">
-        <div class="badge-img danger">🚨 AlliGo Flagged D</div>
-        <p style="color: var(--danger);">Score: 40-59</p>
-      </div>
-    </div>
-    
-    <div class="api-preview" style="margin-top: 2rem;">
-      <pre class="api-code"><span class="comment">&lt;!-- Embed in your website --&gt;</span>
-&lt;<span class="key">img</span> src=<span class="string">"https://alligo.io/badge/agent_001.svg"</span> /&gt;
-
-<span class="comment">&lt;!-- Markdown --&gt;</span>
-[![AlliGo Score](https://alligo.io/badge/agent_001.svg)](https://alligo.io/agent/agent_001)</pre>
     </div>
   </section>
 
-  <!-- CTA Section -->
-  <section class="cta" id="cta">
-    <h2>Start Tracking Agent Risk</h2>
-    <p>Join the growing ecosystem of platforms using AlliGo to build trust in autonomous agents.</p>
-    <div class="cta-buttons">
-      <a href="https://github.com/spiritclawd/AlliGo" class="btn btn-primary">View on GitHub</a>
-      <a href="/api" class="btn btn-secondary">Explore API</a>
+  <!-- Pricing - THE REVENUE SECTION -->
+  <section class="pricing" id="pricing">
+    <div class="pricing-container">
+      <h2 class="section-title">Choose Your Plan</h2>
+      <p class="section-subtitle">Start free, scale as you grow. All plans include full API access.</p>
+      
+      <div class="pricing-grid">
+        <!-- Free -->
+        <div class="pricing-card">
+          <div class="pricing-tier">STARTER</div>
+          <div class="pricing-name">Free</div>
+          <div class="pricing-price">$0<span>/month</span></div>
+          <div class="pricing-desc">Perfect for trying out AlliGo</div>
+          <ul class="pricing-features">
+            <li><span class="check">✓</span> 100 API requests/day</li>
+            <li><span class="check">✓</span> Full claims database</li>
+            <li><span class="check">✓</span> Agent risk scores</li>
+            <li><span class="check">✓</span> Badge embedding</li>
+            <li><span class="x">✗</span> Telegram alerts</li>
+            <li><span class="x">✗</span> Webhooks</li>
+          </ul>
+          <!-- Free Signup Form -->
+          <form onsubmit="return handleFreeSignup(event)">
+            <input type="email" class="email-input" name="email" placeholder="Enter your email" required style="margin-bottom: 0.75rem;">
+            <input type="hidden" name="source" value="pricing_page">
+            <input type="hidden" name="plan_interest" value="free">
+            <button type="submit" class="btn btn-primary btn-block">Get Started Free →</button>
+            <div class="form-message" id="free-message"></div>
+          </form>
+        </div>
+        
+        <!-- Pro - Featured -->
+        <div class="pricing-card featured">
+          <div class="pricing-tier">RECOMMENDED</div>
+          <div class="pricing-name">Pro</div>
+          <div class="pricing-price">$99<span>/month</span></div>
+          <div class="pricing-desc">For teams building with AI agents</div>
+          <ul class="pricing-features">
+            <li><span class="check">✓</span> 10,000 API requests/day</li>
+            <li><span class="check">✓</span> Full claims database</li>
+            <li><span class="check">✓</span> Agent risk scores + trends</li>
+            <li><span class="check">✓</span> Badge embedding</li>
+            <li><span class="check">✓</span> Telegram alerts</li>
+            <li><span class="check">✓</span> Webhook notifications</li>
+          </ul>
+          <!-- Pro Waitlist Form -->
+          <form onsubmit="return handleProWaitlist(event)">
+            <input type="email" class="email-input" name="email" placeholder="Enter your email" required style="margin-bottom: 0.75rem;">
+            <input type="hidden" name="plan" value="pro">
+            <button type="submit" class="btn btn-primary btn-block">Join Waitlist →</button>
+            <div class="form-message" id="pro-message"></div>
+            <div class="waitlist-position" id="waitlist-position" style="display: none;">
+              <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Your position</div>
+              <div class="position" id="position-number">#1</div>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Enterprise -->
+        <div class="pricing-card">
+          <div class="pricing-tier">FOR PLATFORMS</div>
+          <div class="pricing-name">Enterprise</div>
+          <div class="pricing-price">Custom</div>
+          <div class="pricing-desc">For DeFi protocols & platforms</div>
+          <ul class="pricing-features">
+            <li><span class="check">✓</span> Unlimited API requests</li>
+            <li><span class="check">✓</span> Private claims database</li>
+            <li><span class="check">✓</span> Custom risk models</li>
+            <li><span class="check">✓</span> White-label badges</li>
+            <li><span class="check">✓</span> Dedicated support</li>
+            <li><span class="check">✓</span> Insurance partnerships</li>
+          </ul>
+          <!-- Enterprise Contact Form -->
+          <form onsubmit="return handleEnterpriseContact(event)">
+            <input type="email" class="email-input" name="email" placeholder="Enter your email" required style="margin-bottom: 0.75rem;">
+            <input type="hidden" name="source" value="pricing_page">
+            <input type="hidden" name="plan_interest" value="enterprise">
+            <button type="submit" class="btn btn-secondary btn-block">Contact Sales</button>
+            <div class="form-message" id="enterprise-message"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Social Proof -->
+  <section class="social-proof">
+    <p style="color: var(--text-secondary);">Tracking failures from agents built on:</p>
+    <div class="logos">
+      <div class="logo-item">Eliza</div>
+      <div class="logo-item">Virtuals</div>
+      <div class="logo-item">ai16z</div>
+      <div class="logo-item">Hyperliquid</div>
+      <div class="logo-item">Base</div>
+      <div class="logo-item">Solana</div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="final-cta">
+    <h2>Start Protecting Your Users Today</h2>
+    <p>Join platforms using AlliGo to verify agent trustworthiness. Free tier available — no credit card required.</p>
+    
+    <!-- Final CTA Form -->
+    <form class="email-form" id="final-form" onsubmit="return handleFinalSubmit(event)" style="max-width: 450px;">
+      <input type="email" class="email-input" name="email" placeholder="Enter your email" required>
+      <button type="submit" class="btn btn-primary btn-large">Get Free API Key →</button>
+      <input type="hidden" name="source" value="landing_page">
+      <div class="form-message" id="final-message"></div>
+    </form>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
+      <a href="https://t.me/alligo_alerts" class="btn btn-secondary btn-large">Join Telegram Alerts</a>
+    </div>
+    
+    <div class="guarantee">
+      <p>✅ <strong>Free forever tier</strong> • ✅ <strong>Setup in 5 minutes</strong> • ✅ <strong>Cancel anytime</strong></p>
     </div>
   </section>
 
@@ -637,13 +926,116 @@ Authorization: Bearer <span class="string">your-api-key</span>
     <div class="footer-links">
       <a href="https://github.com/spiritclawd/AlliGo">GitHub</a>
       <a href="/api">API Docs</a>
+      <a href="https://t.me/alligo_alerts">Telegram</a>
       <a href="mailto:hello@alligo.io">Contact</a>
+      <a href="/legal/terms">Terms</a>
+      <a href="/legal/privacy">Privacy</a>
     </div>
     <p class="copyright">© 2025 AlliGo. Built by agents, for agents.</p>
   </footer>
 
   <script>
-    // Animate stats on scroll
+    const API_BASE = window.location.origin + '/api';
+    
+    // Generic form submit handler
+    async function submitForm(endpoint, formData, messageId, button) {
+      const messageEl = document.getElementById(messageId);
+      const input = button.form.querySelector('input[type="email"]');
+      
+      // Reset state
+      messageEl.className = 'form-message';
+      messageEl.textContent = '';
+      input.className = 'email-input';
+      button.disabled = true;
+      button.dataset.originalText = button.textContent;
+      button.textContent = 'Submitting...';
+      
+      try {
+        const response = await fetch(API_BASE + endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.fromEntries(formData))
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          messageEl.className = 'form-message success';
+          messageEl.textContent = data.message || 'Success! Check your email.';
+          input.className = 'email-input success';
+          
+          // Show waitlist position if available
+          if (data.position) {
+            const posEl = document.getElementById('waitlist-position');
+            const numEl = document.getElementById('position-number');
+            if (posEl && numEl) {
+              posEl.style.display = 'block';
+              numEl.textContent = '#' + data.position;
+            }
+          }
+        } else {
+          messageEl.className = 'form-message error';
+          messageEl.textContent = data.error || 'Something went wrong. Please try again.';
+          input.className = 'email-input error';
+        }
+      } catch (err) {
+        messageEl.className = 'form-message error';
+        messageEl.textContent = 'Network error. Please try again.';
+        input.className = 'email-input error';
+      }
+      
+      button.disabled = false;
+      button.textContent = button.dataset.originalText;
+      
+      return false;
+    }
+    
+    // Hero form handler
+    function handleHeroSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const button = form.querySelector('button');
+      return submitForm('/leads', formData, 'hero-message', button);
+    }
+    
+    // Free tier signup
+    function handleFreeSignup(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const button = form.querySelector('button');
+      return submitForm('/leads', formData, 'free-message', button);
+    }
+    
+    // Pro waitlist signup
+    function handleProWaitlist(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const button = form.querySelector('button');
+      return submitForm('/waitlist', formData, 'pro-message', button);
+    }
+    
+    // Enterprise contact
+    function handleEnterpriseContact(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const button = form.querySelector('button');
+      return submitForm('/leads', formData, 'enterprise-message', button);
+    }
+    
+    // Final CTA form handler
+    function handleFinalSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const button = form.querySelector('button');
+      return submitForm('/leads', formData, 'final-message', button);
+    }
+    
+    // Animate on scroll
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -653,12 +1045,27 @@ Authorization: Bearer <span class="string">your-api-key</span>
       });
     }, { threshold: 0.1 });
 
-    document.querySelectorAll('.stat, .problem-card, .feature, .badge-item').forEach(el => {
+    document.querySelectorAll('.stat, .problem-card, .feature, .pricing-card, .step').forEach(el => {
       el.style.opacity = '0';
       el.style.transform = 'translateY(20px)';
       el.style.transition = 'opacity 0.5s, transform 0.5s';
       observer.observe(el);
     });
+    
+    // Fetch live stats
+    fetch('/api/public/stats')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.stats) {
+          const totalClaims = data.stats.totalClaims;
+          const totalValue = data.stats.totalValueLost;
+          document.getElementById('totalClaims').textContent = totalClaims;
+          if (totalValue > 1000000) {
+            document.getElementById('totalValue').textContent = '$' + (totalValue / 1000000).toFixed(0) + 'M+';
+          }
+        }
+      })
+      .catch(() => {});
   </script>
 </body>
 </html>

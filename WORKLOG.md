@@ -294,13 +294,56 @@ if (score.grade === 'F') {
 
 ---
 
-## Current Project Stats
+## Session: Revenue Funnel & Telegram Integration (Jan 2026)
 
-| Metric | Value |
-|--------|-------|
-| Claims tracked | 12 |
-| Value lost | $47M+ |
-| Code files | 25+ |
-| Documentation | 5 docs |
-| Extension files | 8 files |
-| Test coverage | Basic unit tests |
+### Issues Fixed
+1. **Railway Deployment** - Dockerfile was using `--frozen-lockfile` but there was no bun.lock
+   - Fixed: Simplified Dockerfile since AlliGo uses only Bun built-in APIs
+   
+2. **Missing Telegram Bot** - Bot code was never actually created
+   - Created: `src/telegram/bot.ts` with full Telegram integration
+   - Created: `src/telegram/index.ts` for exports
+   - Updated: `src/config/index.ts` with TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID
+   - Updated: `src/notifications/index.ts` to include Telegram in notification pipeline
+
+3. **Landing Page Revenue Funnel** - Page didn't end with a clear product offer
+   - Complete redesign of `public/index.html` with:
+     - Clear value proposition in hero
+     - Problem section with real incidents
+     - Solution section with flow diagram
+     - **Use Cases section** showing who uses AlliGo
+     - **Pricing section** with 3 tiers (Free, Pro $99/mo, Enterprise)
+     - FAQ section
+     - CTA buttons throughout
+     - Live stats fetching from API
+
+### New Features
+- **Telegram Bot**: Send claim alerts, daily stats, and leaderboard updates
+- **Pricing Tiers**: Clear monetization path
+  - Free: 100 API req/day, basic access
+  - Pro ($99/mo): 10K req/day, Telegram alerts, webhooks
+  - Enterprise: Custom pricing, white-label, insurance partnerships
+
+### Files Modified/Created
+```
+Dockerfile                          - Fixed build process
+railway.toml                        - Added Telegram env vars
+src/telegram/bot.ts                 - NEW: Telegram bot
+src/telegram/index.ts               - NEW: Exports
+src/config/index.ts                 - Added Telegram config
+src/notifications/index.ts          - Added Telegram integration
+public/index.html                   - Complete redesign with revenue funnel
+```
+
+### Environment Variables Required
+```
+TELEGRAM_BOT_TOKEN=<from @BotFather>
+TELEGRAM_CHANNEL_ID=@alligo_alerts
+```
+
+### Current Stats
+- **22 claims** seeded from real incidents
+- **$72M+** total value tracked
+- **22+ agents** monitored
+
+---

@@ -38,8 +38,12 @@ import {
   getClientId,
   SECURITY_HEADERS,
 } from "../security/middleware";
+import { handleAuthRoute, AUTH_ROUTES } from "../auth/routes";
+import { requireAuth, hasPermission } from "../auth/middleware";
 import { config, validateConfig, printConfig } from "../config";
 import { generateBadge, generateCompactBadge, generateBannerBadge } from "../badge/index";
+import { handlePaymentRoutes } from "../payments/routes";
+import { handleLeadRoutes } from "../leads/routes";
 
 // ==================== RISK SCORING ====================
 
@@ -182,6 +186,25 @@ function serveDashboard(): Response {
   }
   
   return new Response("Dashboard not found", { status: 404 });
+}
+
+function serveAdminDashboard(): Response {
+  try {
+    const adminPath = join(process.cwd(), "public", "admin", "index.html");
+    if (existsSync(adminPath)) {
+      const html = readFileSync(adminPath, "utf-8");
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html",
+          ...SECURITY_HEADERS,
+        },
+      });
+    }
+  } catch (e) {
+    console.error("Error serving admin dashboard:", e);
+  }
+  
+  return new Response("Admin dashboard not found", { status: 404 });
 }
 
 // ==================== HANDLERS ====================
@@ -548,6 +571,11 @@ async function handleRequest(req: Request): Promise<Response> {
     return serveDashboard();
   }
   
+  // Admin Dashboard
+  if (path === "/admin" && method === "GET") {
+    return serveAdminDashboard();
+  }
+  
   // API Info
   if (path === "/api" && method === "GET") {
     return json({
@@ -570,8 +598,28 @@ async function handleRequest(req: Request): Promise<Response> {
         "GET /health": "Health check",
         "GET /legal/terms": "Terms of Service",
         "GET /legal/privacy": "Privacy Policy",
+        // Payment endpoints
+        "POST /api/payments/create-checkout-session": "Create Stripe checkout session",
+        "POST /api/payments/webhook": "Stripe webhook handler",
+        "GET /api/payments/subscription": "Get current subscription",
+        "POST /api/payments/portal": "Create customer portal session",
+        "GET /api/payments/plans": "Get available plans",
+        // Lead endpoints
+        "POST /api/leads": "Capture email from landing page (public)",
+        "GET /api/leads": "List all leads (admin)",
+        "GET /api/leads/stats": "Get lead statistics (admin)",
+        "GET /api/leads/export": "Export leads as CSV (admin)",
+        "DELETE /api/leads/:id": "Delete a lead (admin)",
+        "POST /api/waitlist": "Join the Pro waitlist (public)",
+        "GET /api/waitlist": "List waitlist entries (admin)",
+        "GET /api/waitlist/position?email=...": "Check waitlist position (public)",
+        "POST /api/waitlist/:id/approve": "Approve waitlist entry (admin)",
+        "POST /api/waitlist/:id/decline": "Decline waitlist entry (admin)",
+        "GET /api/waitlist/export": "Export waitlist as CSV (admin)",
+        "POST /api/newsletter/digest": "Send weekly digest (admin)",
+        ...AUTH_ROUTES,
       },
-      auth: "Bearer <API_KEY> required for protected endpoints",
+      auth: "Bearer <API_KEY> or session token required for protected endpoints",
     });
   }
   
@@ -621,6 +669,23 @@ async function handleRequest(req: Request): Promise<Response> {
   // Legal pages
   if (path === "/legal/terms" && method === "GET") return serveLegalPage("terms");
   if (path === "/legal/privacy" && method === "GET") return serveLegalPage("privacy");
+  
+  // Auth routes
+  if (path.startsWith("/api/auth")) {
+    return handleAuthRoute(req);
+  }
+  
+  // Payment routes
+  const paymentResponse = await handlePaymentRoutes(path, method, req);
+  if (paymentResponse) {
+    return paymentResponse;
+  }
+  
+  // Lead routes (email capture, waitlist, newsletter)
+  const leadResponse = await handleLeadRoutes(req, path, config.adminApiKey);
+  if (leadResponse) {
+    return leadResponse;
+  }
   
   return error("Not found", 404);
 }

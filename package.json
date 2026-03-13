@@ -30,6 +30,8 @@
   "engines": {
     "bun": ">=1.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "stripe": "^20.4.1"
+  },
   "devDependencies": {}
 }

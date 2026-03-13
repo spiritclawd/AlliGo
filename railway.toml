@@ -16,3 +16,5 @@ restartPolicyMaxRetries = 3
 # - ADMIN_API_KEY: Your secure admin API key
 # - JWT_SECRET: Secret for JWT tokens
 # - DATABASE_PATH: /app/data/alligo.db (default)
+# - TELEGRAM_BOT_TOKEN: Bot token from @BotFather
+# - TELEGRAM_CHANNEL_ID: Channel ID for alerts (e.g., @alligo_alerts)

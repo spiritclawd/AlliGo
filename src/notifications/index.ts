@@ -5,6 +5,7 @@
 
 import { sendNewClaimNotification, sendWeeklyDigest } from '../email/index';
 import { triggerClaimCreated, triggerClaimVerified } from '../webhooks/index';
+import { sendClaimAlert, sendDailyStats, sendLeaderboardUpdate } from '../telegram/index';
 
 interface Claim {
   id: string;
@@ -23,12 +24,14 @@ interface Claim {
 interface NotificationConfig {
   email: boolean;
   webhooks: boolean;
+  telegram: boolean;
   minAmount?: number;
 }
 
 const defaultConfig: NotificationConfig = {
   email: true,
   webhooks: true,
+  telegram: true,
   minAmount: 10000,
 };
 
@@ -38,8 +41,8 @@ const defaultConfig: NotificationConfig = {
 export async function notifyNewClaim(
   claim: Claim,
   config: NotificationConfig = defaultConfig
-): Promise<{ email: boolean; webhooks: boolean }> {
-  const results = { email: false, webhooks: false };
+): Promise<{ email: boolean; webhooks: boolean; telegram: boolean }> {
+  const results = { email: false, webhooks: false, telegram: false };
 
   if (config.minAmount && claim.amountLost < config.minAmount) {
     console.log(`Claim ${claim.id} below notification threshold`);
@@ -77,6 +80,19 @@ export async function notifyNewClaim(
     );
   }
 
+  if (config.telegram) {
+    promises.push(
+      (async () => {
+        try {
+          const result = await sendClaimAlert(claim);
+          results.telegram = result.success;
+        } catch (e) {
+          console.error('Telegram notification failed:', e);
+        }
+      })()
+    );
+  }
+
   await Promise.allSettled(promises);
   return results;
 }
@@ -101,4 +117,42 @@ export async function sendWeeklyDigestToSubscribers(stats: {
   }
 }
 
-export default { notifyNewClaim, sendWeeklyDigestToSubscribers };
+/**
+ * Send daily stats to Telegram
+ */
+export async function sendDailyStatsToTelegram(stats: {
+  totalClaims: number;
+  totalValueLost: number;
+  claimsToday: number;
+  valueLostToday: number;
+  topCategory: string;
+  topChain: string;
+}): Promise<boolean> {
+  try {
+    const result = await sendDailyStats(stats);
+    return result.success;
+  } catch (e) {
+    console.error('Failed to send Telegram daily stats:', e);
+    return false;
+  }
+}
+
+/**
+ * Send leaderboard update to Telegram
+ */
+export async function sendLeaderboardToTelegram(agents: Array<{
+  agentId: string;
+  agentName?: string;
+  claims: number;
+  valueLost: number;
+}>): Promise<boolean> {
+  try {
+    const result = await sendLeaderboardUpdate(agents);
+    return result.success;
+  } catch (e) {
+    console.error('Failed to send Telegram leaderboard:', e);
+    return false;
+  }
+}
+
+export default { notifyNewClaim, sendWeeklyDigestToSubscribers, sendDailyStatsToTelegram, sendLeaderboardToTelegram };
