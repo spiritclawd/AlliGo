@@ -166,6 +166,39 @@ function requireAuth(req: Request, requiredPermission: "read" | "write" | "admin
 
 // ==================== DASHBOARD ====================
 
+function serveAgentCard(): Response {
+  try {
+    const cardPath = join(process.cwd(), "public", ".well-known", "agent-card.json");
+    if (existsSync(cardPath)) {
+      const content = readFileSync(cardPath, "utf-8");
+      // Update with live stats
+      const claims = getAllClaims(1000);
+      const totalValueLost = claims.reduce((sum, c) => sum + c.amountLost, 0);
+      const card = JSON.parse(content);
+      card.data = {
+        total_claims: claims.length,
+        total_value_lost_usd: totalValueLost,
+        agents_tracked: new Set(claims.map(c => c.agentId)).size,
+        last_updated: new Date().toISOString().split('T')[0]
+      };
+      card.endpoints.base_url = process.env.RAILWAY_STATIC_URL 
+        ? `https://${process.env.RAILWAY_STATIC_URL}` 
+        : `http://localhost:${config.port}`;
+      
+      return new Response(JSON.stringify(card, null, 2), {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Cache-Control": "public, max-age=300",
+        },
+      });
+    }
+  } catch (e) {
+    console.error("Error serving agent card:", e);
+  }
+  return new Response("Agent card not found", { status: 404 });
+}
+
 function serveDashboard(): Response {
   try {
     const dashboardPath = join(process.cwd(), "public", "index.html");
@@ -579,6 +612,11 @@ async function handleRequest(req: Request): Promise<Response> {
   // Admin Dashboard
   if (path === "/admin" && method === "GET") {
     return serveAdminDashboard();
+  }
+  
+  // Agent Card (for GateX, Daydreams, etc.)
+  if (path === "/.well-known/agent-card.json" && method === "GET") {
+    return serveAgentCard();
   }
   
   // API Info

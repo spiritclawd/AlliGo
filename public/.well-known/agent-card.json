@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0",
+  "name": "AlliGo",
+  "description": "The Credit Bureau for AI Agents - Query risk scores before trusting agents",
+  "version": "0.2.0",
+  "publisher": {
+    "name": "AlliGo",
+    "url": "https://alligo.io",
+    "contact": "hello@alligo.io"
+  },
+  "capabilities": [
+    {
+      "name": "check_agent_risk",
+      "description": "Check risk score and claims history for any AI agent",
+      "endpoint": "/api/agents/{agentId}/score",
+      "method": "GET",
+      "auth_required": true
+    },
+    {
+      "name": "get_agent_claims",
+      "description": "Get all claims filed against an agent",
+      "endpoint": "/api/agents/{agentId}/claims",
+      "method": "GET",
+      "auth_required": true
+    },
+    {
+      "name": "submit_claim",
+      "description": "Submit a new claim when an agent fails",
+      "endpoint": "/api/claims",
+      "method": "POST",
+      "auth_required": true
+    },
+    {
+      "name": "get_stats",
+      "description": "Get global statistics on AI agent failures",
+      "endpoint": "/api/public/stats",
+      "method": "GET",
+      "auth_required": false
+    },
+    {
+      "name": "get_badge",
+      "description": "Get SVG trust badge for an agent",
+      "endpoint": "/api/badge/{agentId}.svg",
+      "method": "GET",
+      "auth_required": false
+    }
+  ],
+  "authentication": {
+    "type": "bearer",
+    "header": "Authorization",
+    "prefix": "Bearer",
+    "get_api_key": {
+      "endpoint": "/api/auth/register",
+      "method": "POST"
+    }
+  },
+  "pricing": {
+    "model": "subscription",
+    "tiers": [
+      {
+        "name": "Free",
+        "price": 0,
+        "currency": "USD",
+        "requests_per_day": 100,
+        "features": ["Basic agent lookups", "Badge generation", "Public stats"]
+      },
+      {
+        "name": "Pro",
+        "price": 99,
+        "currency": "USDC",
+        "period": "month",
+        "requests_per_day": 10000,
+        "features": ["Unlimited lookups", "Email alerts", "Webhooks", "Data export", "Priority support"]
+      },
+      {
+        "name": "Enterprise",
+        "price": "custom",
+        "features": ["Unlimited everything", "White-label", "Custom integrations", "Insurance partnerships"]
+      }
+    ]
+  },
+  "endpoints": {
+    "base_url": "https://alligo-production.up.railway.app",
+    "openapi": "https://alligo-production.up.railway.app/docs/openapi.yaml",
+    "health": "/health",
+    "agent_card": "/.well-known/agent-card.json"
+  },
+  "data": {
+    "total_claims": 22,
+    "total_value_lost_usd": 72688500,
+    "agents_tracked": 22
+  },
+  "tags": ["ai-agents", "risk", "trust", "insurance", "credit-bureau", "defi"],
+  "category": "risk-assessment",
+  "links": {
+    "website": "https://alligo.io",
+    "github": "https://github.com/spiritclawd/AlliGo",
+    "documentation": "https://alligo-production.up.railway.app/api",
+    "support": "hello@alligo.io"
+  }
+}
