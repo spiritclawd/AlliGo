@@ -627,6 +627,152 @@
     .footer-links a:hover { color: var(--accent); }
     .copyright { color: var(--text-secondary); font-size: 0.875rem; }
     
+    /* Claims Leaderboard - The Hook */
+    .claims-leaderboard {
+      background: var(--bg-secondary);
+      padding: 4rem 2rem;
+    }
+    
+    .claims-leaderboard h2 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .claims-leaderboard .subtitle {
+      text-align: center;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+    
+    .claims-list {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    .claim-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 1.5rem;
+      align-items: center;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    
+    .claim-card:hover {
+      transform: translateX(4px);
+      border-color: var(--accent);
+    }
+    
+    .claim-card.blurred {
+      filter: blur(4px);
+      user-select: none;
+      pointer-events: none;
+      position: relative;
+    }
+    
+    .claim-card.blurred::after {
+      content: '🔒 UNLOCK WITH $1 USDC';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 10, 10, 0.8);
+      border-radius: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      filter: none;
+      cursor: pointer;
+    }
+    
+    .claim-rank {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.25rem;
+    }
+    
+    .claim-rank.rank-1 { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; }
+    .claim-rank.rank-2 { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); color: #000; }
+    .claim-rank.rank-3 { background: linear-gradient(135deg, #cd7f32, #b87333); color: #000; }
+    .claim-rank.rank-other { background: var(--bg-primary); border: 2px solid var(--border); color: var(--text-secondary); }
+    
+    .claim-info h4 {
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .claim-info .agent-name {
+      color: var(--accent);
+      font-weight: 500;
+    }
+    
+    .claim-info .claim-desc {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+    
+    .claim-info .claim-tags {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    
+    .claim-tag {
+      background: var(--bg-primary);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    
+    .claim-tag.danger { background: rgba(255, 68, 68, 0.2); color: var(--danger); }
+    .claim-tag.warning { background: rgba(255, 170, 0, 0.2); color: var(--warning); }
+    
+    .claim-amount {
+      text-align: right;
+    }
+    
+    .claim-amount .value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--danger);
+    }
+    
+    .claim-amount .label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    
+    .unlock-cta {
+      text-align: center;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: var(--bg-card);
+      border: 1px dashed var(--accent);
+      border-radius: 12px;
+    }
+    
+    .unlock-cta p {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+    
+    .unlock-cta .btn {
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+    
     @media (max-width: 768px) {
       .hero h1 { font-size: 2.5rem; }
       .hero-stats { flex-direction: column; gap: 1.5rem; }
@@ -634,6 +780,10 @@
       .section { padding: 4rem 1rem; }
       .email-form { flex-direction: column; }
       .email-form .btn { width: 100%; }
+      .claim-card { grid-template-columns: 1fr; text-align: center; }
+      .claim-rank { margin: 0 auto; }
+      .claim-amount { text-align: center; margin-top: 0.5rem; }
+      .claim-info .claim-tags { justify-content: center; }
     }
   </style>
 </head>
@@ -683,6 +833,125 @@
         <div class="stat-value" id="agentsTracked">22+</div>
         <div class="stat-label">Agents Monitored</div>
       </div>
+    </div>
+  </section>
+
+  <!-- Claims Leaderboard - The Hook -->
+  <section class="claims-leaderboard" id="leaderboard">
+    <h2>💸 Agent Failure Leaderboard</h2>
+    <p class="subtitle">Real incidents. Real money lost. This is why you check before you trust.</p>
+    
+    <div class="claims-list">
+      <!-- #1 - Arup Deepfake (VISIBLE HOOK) -->
+      <div class="claim-card">
+        <div class="claim-rank rank-1">1</div>
+        <div class="claim-info">
+          <h4><span class="agent-name">Arup Finance Verification Agent</span></h4>
+          <p class="claim-desc">AI deepfakes impersonated CFO in video call, authorized transfer. Insufficient verification of video participants.</p>
+          <div class="claim-tags">
+            <span class="claim-tag danger">FRAUD</span>
+            <span class="claim-tag">SECURITY</span>
+            <span class="claim-tag">Traditional Banking</span>
+          </div>
+        </div>
+        <div class="claim-amount">
+          <div class="value">$25M</div>
+          <div class="label">HK$200M lost</div>
+        </div>
+      </div>
+      
+      <!-- #2 - AI Portfolio Manager (VISIBLE HOOK) -->
+      <div class="claim-card">
+        <div class="claim-rank rank-2">2</div>
+        <div class="claim-info">
+          <h4><span class="agent-name">AI Portfolio Manager</span></h4>
+          <p class="claim-desc">Whale's AI-managed portfolio collapsed 88% on agent tokens. No stop-losses, no position limits, concentrated exposure.</p>
+          <div class="claim-tags">
+            <span class="claim-tag danger">LOSS</span>
+            <span class="claim-tag">TRADING</span>
+            <span class="claim-tag">Multi-chain</span>
+          </div>
+        </div>
+        <div class="claim-amount">
+          <div class="value">$20.4M</div>
+          <div class="label">Portfolio collapse</div>
+        </div>
+      </div>
+      
+      <!-- #3 - KiloEx (VISIBLE HOOK) -->
+      <div class="claim-card">
+        <div class="claim-rank rank-3">3</div>
+        <div class="claim-info">
+          <h4><span class="agent-name">KiloEx Trading Agent</span></h4>
+          <p class="claim-desc">Flash loan exploit manipulated price oracles. No flash loan protection. Platform drained in hours.</p>
+          <div class="claim-tags">
+            <span class="claim-tag danger">LOSS</span>
+            <span class="claim-tag warning">TRADING</span>
+            <span class="claim-tag">BNB Chain</span>
+          </div>
+        </div>
+        <div class="claim-amount">
+          <div class="value">$7M</div>
+          <div class="label">Flash loan exploit</div>
+        </div>
+      </div>
+      
+      <!-- #4 - BLURRED (LOCKED) -->
+      <div class="claim-card blurred">
+        <div class="claim-rank rank-other">4</div>
+        <div class="claim-info">
+          <h4><span class="agent-name">Credix Lending Agent</span></h4>
+          <p class="claim-desc">Admin wallet compromised, attacker minted tokens and drained protocol funds...</p>
+          <div class="claim-tags">
+            <span class="claim-tag danger">SECURITY</span>
+            <span class="claim-tag">Ethereum</span>
+          </div>
+        </div>
+        <div class="claim-amount">
+          <div class="value">$4.5M</div>
+          <div class="label">Admin key breach</div>
+        </div>
+      </div>
+      
+      <!-- #5 - BLURRED (LOCKED) -->
+      <div class="claim-card blurred">
+        <div class="claim-rank rank-other">5</div>
+        <div class="claim-info">
+          <h4><span class="agent-name">Makina Yield Optimizer</span></h4>
+          <p class="claim-desc">Flash loan attack on Curve pool, MEV bots front-ran price manipulation...</p>
+          <div class="claim-tags">
+            <span class="claim-tag danger">LOSS</span>
+            <span class="claim-tag">Curve Finance</span>
+          </div>
+        </div>
+        <div class="claim-amount">
+          <div class="value">$4.1M</div>
+          <div class="label">Price manipulation</div>
+        </div>
+      </div>
+      
+      <!-- #6 - BLURRED (LOCKED) -->
+      <div class="claim-card blurred">
+        <div class="claim-rank rank-other">6</div>
+        <div class="claim-info">
+          <h4><span class="agent-name">Griffin AI DeFi Agent</span></h4>
+          <p class="claim-desc">Exploited one day after launch. Smart contract vulnerability drained funds...</p>
+          <div class="claim-tags">
+            <span class="claim-tag danger">SECURITY</span>
+            <span class="claim-tag">Ethereum</span>
+          </div>
+        </div>
+        <div class="claim-amount">
+          <div class="value">$3M</div>
+          <div class="label">Day-1 exploit</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Unlock CTA -->
+    <div class="unlock-cta">
+      <p>🔒 <strong>19 more claims</strong> in our database. Unlock full access to see all incidents, root causes, and risk scores.</p>
+      <a href="#pricing" class="btn">Get Full Access — $1 USDC</a>
     </div>
   </section>
 
