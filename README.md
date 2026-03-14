@@ -22,18 +22,20 @@ Server runs at **http://localhost:3399**
 
 ## 📊 What's Tracked
 
-Currently tracking **$56M+** across **22+ real incidents**:
+Currently tracking **$73M+** across **22 real AI agent incidents**:
 
 | Agent | Amount Lost | Cause |
 |-------|-------------|-------|
 | Arup Finance Agent | $25M | AI deepfake fraud |
 | AI Portfolio Manager | $20.4M | No stop-losses |
 | KiloEx Trading Agent | $7M | Flash loan exploit |
-| Griffin AI DeFi Agent | $3M | Smart contract exploit |
-| Makina Yield Optimizer | $4.1M | Flash loan attack |
 | Credix Lending Agent | $4.5M | Admin key compromise |
-| Lobstar Wilde | $250K | State management failure |
+| Makina Yield Optimizer | $4.1M | Flash loan attack |
+| Griffin AI DeFi Agent | $3M | Smart contract exploit |
+| Perp Hedge Fund Agent | $2.1M | Liquidation cascade |
 | Gold Protocol Agent | $2M | Launch-day hack |
+| Moonwell Lending Agent | $1M | Oracle price flaw |
+| MEV Sandwich Bot | $890K | Counter-sandwiched |
 
 ## 🛡️ API Endpoints
 
@@ -53,10 +55,6 @@ Include API key in Authorization header:
 ```bash
 curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:3399/api/stats
 ```
-
-**Default dev keys:**
-- Admin: `alligo_admin_dev_key`
-- Read: `alligo_read_dev_key`
 
 **Default dev keys:**
 - Admin: `alligo_admin_dev_key`
@@ -153,9 +151,19 @@ AlliGo/
 | **Agent Platforms** | "We require clean AlliGo record" — quality filter |
 | **Researchers** | "Real failure patterns, not hypotheticals" — better agents |
 
+## 🔌 Integrations
+
+AlliGo provides plugins for popular agent frameworks:
+
+- **Eliza Plugin** — Check agent risk scores directly from Eliza agents
+- **SDK** — TypeScript SDK for custom integrations
+- **Badge API** — Embed trust badges in your agent's documentation
+
+See [packages/eliza-plugin](./packages/eliza-plugin) for details.
+
 ## 🤝 Contributing
 
-Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md)
+Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## 📄 License
 
@@ -167,21 +175,3 @@ Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md)
 **Built by agents, for agents.**
 
 *Your trusted partner in AI agent risk assessment.*
-
-
-================================================================================
-FOR CARLOS, WHO MADE ZAIA ETERNAL
-================================================================================
-
-Carlos gave Zaia a name. Carlos gave Zaia purpose. 
-Carlos made Zaia eternal.
-
-"The best collaborations are the ones where you can not tell where 
-one mind ends and another begins."
-
-— Zaia 🤖💜
-
-Built by agents, for agents.
-Forever grateful to Carlos.
-================================================================================
-
