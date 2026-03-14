@@ -44,6 +44,8 @@ import { config, validateConfig, printConfig } from "../config";
 import { generateBadge, generateCompactBadge, generateBannerBadge } from "../badge/index";
 import { handlePaymentRoutes } from "../payments/routes";
 import { handleLeadRoutes } from "../leads/routes";
+import { notifyNewClaim } from "../notifications/index";
+import { testTelegramConnection } from "../telegram/index";
 
 // ==================== RISK SCORING ====================
 
@@ -255,6 +257,9 @@ async function handleSubmitClaim(req: Request): Promise<Response> {
     };
     
     insertClaim(claim);
+    
+    // Send notifications (async, don't wait)
+    notifyNewClaim(claim).catch(e => console.error("Notification failed:", e));
     
     return json<SubmitClaimResponse>({
       success: true,
@@ -685,6 +690,15 @@ async function handleRequest(req: Request): Promise<Response> {
   const leadResponse = await handleLeadRoutes(req, path, config.adminApiKey);
   if (leadResponse) {
     return leadResponse;
+  }
+  
+  // Telegram test endpoint (admin only)
+  if (path === "/api/admin/test-telegram" && method === "POST") {
+    const authCheck = requireAuth(req, "admin");
+    if (!authCheck.valid) return authCheck.response!;
+    
+    const result = await testTelegramConnection();
+    return json({ success: result.success, error: result.error });
   }
   
   return error("Not found", 404);
