@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Documentation | AlliGo - The Credit Bureau for AI Agents</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-card: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #888888;
+      --accent: #00ff88;
+      --accent-hover: #00cc6a;
+      --accent-dim: rgba(0, 255, 136, 0.1);
+      --danger: #ff4444;
+      --warning: #ffaa00;
+      --border: #333333;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+    
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+    
+    header {
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+    
+    .logo span { color: var(--accent); }
+    
+    .header-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+    
+    .header-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    
+    .header-links a:hover { color: var(--accent); }
+    
+    .hero {
+      padding: 4rem 2rem;
+      text-align: center;
+      background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    }
+    
+    .hero h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { font-size: 1.25rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto; }
+    
+    main { padding: 3rem 0; }
+    
+    .docs-grid {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 3rem;
+    }
+    
+    .sidebar { position: sticky; top: 80px; height: fit-content; }
+    .sidebar h3 { font-size: 0.875rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
+    .sidebar nav { display: flex; flex-direction: column; gap: 0.5rem; }
+    .sidebar a { color: var(--text-secondary); text-decoration: none; padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.875rem; transition: all 0.2s; }
+    .sidebar a:hover, .sidebar a.active { background: var(--accent-dim); color: var(--accent); }
+    
+    .content section { margin-bottom: 4rem; }
+    .content h2 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+    .content h3 { font-size: 1.5rem; font-weight: 600; margin: 2rem 0 1rem; }
+    .content h4 { font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; }
+    .content p { color: var(--text-secondary); margin-bottom: 1rem; }
+    
+    .code-block {
+      background: #0d0d0d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+    
+    .code-header {
+      background: var(--bg-card);
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .code-header span { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; }
+    .code-header button { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s; }
+    .code-header button:hover { border-color: var(--accent); color: var(--accent); }
+    
+    pre { padding: 1rem; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; line-height: 1.7; }
+    .comment { color: #666; }
+    .method { color: #00ff88; }
+    .string { color: #ffd700; }
+    .number { color: #ff6b6b; }
+    .key { color: #64b5f6; }
+    .endpoint { color: var(--accent); }
+    
+    .payment-box {
+      background: linear-gradient(135deg, var(--bg-card) 0%, rgba(0, 255, 136, 0.05) 100%);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+    }
+    
+    .payment-box h3 { color: var(--accent); margin-top: 0; }
+    .payment-steps { display: grid; gap: 1.5rem; margin-top: 1.5rem; }
+    .payment-step { display: flex; gap: 1rem; align-items: flex-start; }
+    .step-number { width: 32px; height: 32px; background: var(--accent); color: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+    .step-content h4 { margin: 0 0 0.5rem 0; }
+    .step-content p { margin: 0; font-size: 0.875rem; }
+    
+    .tiers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+    .tier-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+    .tier-card.recommended { border-color: var(--accent); background: linear-gradient(180deg, rgba(0, 255, 136, 0.05) 0%, var(--bg-card) 100%); }
+    .tier-name { font-size: 0.875rem; color: var(--accent); font-weight: 600; margin-bottom: 0.5rem; }
+    .tier-price { font-size: 2rem; font-weight: 800; }
+    .tier-price span { font-size: 1rem; color: var(--text-secondary); font-weight: 400; }
+    .tier-desc { color: var(--text-secondary); font-size: 0.875rem; margin: 0.5rem 0 1rem; }
+    .tier-features { list-style: none; font-size: 0.875rem; }
+    .tier-features li { padding: 0.25rem 0; display: flex; gap: 0.5rem; }
+    .tier-features .check { color: var(--accent); }
+    
+    .response-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin: 1rem 0; }
+    .response-box h4 { margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; }
+    .status-badge { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; }
+    .status-badge.success { background: rgba(0, 255, 136, 0.2); color: var(--accent); }
+    .status-badge.error { background: rgba(255, 68, 68, 0.2); color: var(--danger); }
+    .status-badge.payment { background: rgba(255, 170, 0, 0.2); color: var(--warning); }
+    
+    .try-it { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin: 2rem 0; }
+    .try-it h3 { margin-top: 0; }
+    .try-it-form { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+    .try-it-form input { flex: 1; min-width: 200px; padding: 0.75rem 1rem; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; }
+    .try-it-form input:focus { outline: none; border-color: var(--accent); }
+    .try-it-form button { background: var(--accent); color: var(--bg-primary); border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .try-it-form button:hover { background: var(--accent-hover); transform: translateY(-2px); }
+    .try-it-result { margin-top: 1.5rem; display: none; }
+    .try-it-result.show { display: block; }
+    
+    footer { padding: 3rem 2rem; border-top: 1px solid var(--border); text-align: center; color: var(--text-secondary); }
+    
+    @media (max-width: 768px) {
+      .docs-grid { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .hero h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <a href="/" class="logo">Alli<span>Go</span></a>
+      <div class="header-links">
+        <a href="#quickstart">Quick Start</a>
+        <a href="#authentication">Authentication</a>
+        <a href="#endpoints">Endpoints</a>
+        <a href="#payment">x402 Payment</a>
+        <a href="https://github.com/spiritclawd/AlliGo">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>API <span>Documentation</span></h1>
+    <p>Integrate AlliGo risk scores into your platform in under 5 minutes. Pay with USDC via x402 protocol.</p>
+  </section>
+
+  <main class="container">
+    <div class="docs-grid">
+      <aside class="sidebar">
+        <h3>Getting Started</h3>
+        <nav>
+          <a href="#quickstart">Quick Start</a>
+          <a href="#authentication">Authentication</a>
+          <a href="#payment">x402 Payment</a>
+        </nav>
+        <h3 style="margin-top: 2rem;">Endpoints</h3>
+        <nav>
+          <a href="#agent-score">Agent Score</a>
+          <a href="#forensics">Forensics Report</a>
+          <a href="#badge">Trust Badge</a>
+          <a href="#public-stats">Public Stats</a>
+        </nav>
+        <h3 style="margin-top: 2rem;">Reference</h3>
+        <nav>
+          <a href="#errors">Error Codes</a>
+          <a href="#rates">Rate Limits</a>
+        </nav>
+      </aside>
+
+      <div class="content">
+        <section id="quickstart">
+          <h2>Quick Start</h2>
+          <p>Get started with AlliGo in 3 simple steps. You can use the API immediately with x402 payment - no API key required for first request.</p>
+          
+          <div class="payment-box">
+            <h3>Get Your First Report for $1 USDC</h3>
+            <p>Try the full API with a single payment. No signup required.</p>
+            <div class="payment-steps">
+              <div class="payment-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                  <h4>Make a Request</h4>
+                  <p>Call any protected endpoint. You'll receive a 402 Payment Required response with payment details.</p>
+                </div>
+              </div>
+              <div class="payment-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                  <h4>Send USDC Payment</h4>
+                  <p>Send exactly $1 USDC to the recipient address on Base, Ethereum, Polygon, Arbitrum, Optimism, or Solana.</p>
+                </div>
+              </div>
+              <div class="payment-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                  <h4>Retry with Proof</h4>
+                  <p>Include your transaction hash in the X-Payment header. Get instant access to the data.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <h3>Try It Now - Free Public Endpoint</h3>
+          <div class="try-it">
+            <h3>Check an Agent's Risk Score</h3>
+            <form class="try-it-form" onsubmit="return tryAgentScore(event)">
+              <input type="text" id="agentId" placeholder="Enter agent ID (e.g., eliza_trader_001)" value="eliza_trader_001">
+              <button type="submit">Check Score</button>
+            </form>
+            <div class="try-it-result" id="scoreResult">
+              <div class="response-box">
+                <h4>Response</h4>
+                <pre id="scoreOutput"></pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="authentication">
+          <h2>Authentication</h2>
+          <p>AlliGo supports two authentication methods:</p>
+          
+          <h3>Option 1: x402 Payment (Recommended for Quick Access)</h3>
+          <p>Pay per-request with USDC. No API key needed. Perfect for one-off queries or testing.</p>
+          
+          <div class="code-block">
+            <div class="code-header">
+              <span>Payment Flow</span>
+              <button onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><span class="comment">// Step 1: Make request without auth</span>
+<span class="method">POST</span> /api/forensics
+<span class="key">Content-Type:</span> application/json
+{<span class="key">"agentId"</span>: <span class="string">"eliza_trader_001"</span>}
+
+<span class="comment">// Step 2: Receive 402 Payment Required</span>
+{
+  <span class="key">"version"</span>: <span class="string">"x402/1.0"</span>,
+  <span class="key">"accepts"</span>: [{
+    <span class="key">"paymentType"</span>: <span class="string">"usdc"</span>,
+    <span class="key">"chain"</span>: <span class="string">"base"</span>,
+    <span class="key">"recipient"</span>: <span class="string">"0x742d35Cc..."</span>,
+    <span class="key">"amount"</span>: <span class="string">"1.000000"</span>
+  }]
+}
+
+<span class="comment">// Step 3: Retry with payment proof</span>
+<span class="method">POST</span> /api/forensics
+<span class="key">X-Payment:</span> {<span class="key">"txHash"</span>:<span class="string">"0xabc123..."</span>,<span class="key">"chain"</span>:<span class="string">"base"</span>}</pre>
+          </div>
+          
+          <h3>Option 2: API Key</h3>
+          <div class="code-block">
+            <div class="code-header">
+              <span>API Key Auth</span>
+              <button onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><span class="method">GET</span> /api/agents/<span class="endpoint">:agentId</span>/score
+<span class="key">Authorization:</span> Bearer alligo_live_xxxxxxxxxxxxx</pre>
+          </div>
+        </section>
+
+        <section id="payment">
+          <h2>x402 Payment Protocol</h2>
+          <p>AlliGo uses the x402 protocol for USDC payments. Instant, trustless access to premium data.</p>
+          
+          <h3>Payment Tiers</h3>
+          <div class="tiers-grid">
+            <div class="tier-card">
+              <div class="tier-name">SINGLE REPORT</div>
+              <div class="tier-price">$1<span> USDC</span></div>
+              <div class="tier-desc">Perfect for one-time checks</div>
+              <ul class="tier-features">
+                <li><span class="check">✓</span> 1 API request</li>
+                <li><span class="check">✓</span> Full forensics report</li>
+              </ul>
+            </div>
+            <div class="tier-card recommended">
+              <div class="tier-name">BASIC</div>
+              <div class="tier-price">$10<span> USDC</span></div>
+              <div class="tier-desc">For regular users</div>
+              <ul class="tier-features">
+                <li><span class="check">✓</span> 50 API requests</li>
+                <li><span class="check">✓</span> Full forensics reports</li>
+              </ul>
+            </div>
+            <div class="tier-card">
+              <div class="tier-name">PRO</div>
+              <div class="tier-price">$50<span> USDC</span></div>
+              <div class="tier-desc">For teams</div>
+              <ul class="tier-features">
+                <li><span class="check">✓</span> 500 API requests</li>
+                <li><span class="check">✓</span> Priority support</li>
+              </ul>
+            </div>
+            <div class="tier-card">
+              <div class="tier-name">ENTERPRISE</div>
+              <div class="tier-price">$200<span> USDC</span></div>
+              <div class="tier-desc">For platforms</div>
+              <ul class="tier-features">
+                <li><span class="check">✓</span> Unlimited (30 days)</li>
+                <li><span class="check">✓</span> Dedicated support</li>
+              </ul>
+            </div>
+          </div>
+          
+          <h3>Supported Chains</h3>
+          <div class="response-box">
+            <ul style="list-style: none; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+              <li>Base</li>
+              <li>Ethereum</li>
+              <li>Polygon</li>
+              <li>Arbitrum</li>
+              <li>Optimism</li>
+              <li>Solana</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="endpoints">
+          <h2>API Endpoints</h2>
+          
+          <h3 id="agent-score">Get Agent Risk Score</h3>
+          <div class="code-block">
+            <div class="code-header">
+              <span>Request</span>
+              <button onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><span class="method">GET</span> /api/agents/<span class="endpoint">:agentId</span>/score</pre>
+          </div>
+          
+          <div class="response-box">
+            <h4><span class="status-badge success">200 OK</span> Response</h4>
+            <pre>{
+  <span class="key">"agentId"</span>: <span class="string">"eliza_trader_001"</span>,
+  <span class="key">"riskScore"</span>: <span class="number">72.5</span>,
+  <span class="key">"grade"</span>: <span class="string">"B"</span>,
+  <span class="key">"totalClaims"</span>: <span class="number">2</span>,
+  <span class="key">"totalValueLost"</span>: <span class="number">57000</span>
+}</pre>
+          </div>
+          
+          <h3 id="forensics">Deep Forensics Report</h3>
+          <p>Full on-chain forensics analysis. Requires x402 payment or API key.</p>
+          
+          <div class="code-block">
+            <div class="code-header">
+              <span>Request</span>
+              <button onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><span class="method">POST</span> /api/forensics
+<span class="key">Content-Type:</span> application/json
+{
+  <span class="key">"agentId"</span>: <span class="string">"0x742d35Cc..."</span>,
+  <span class="key">"depth"</span>: <span class="string">"standard"</span>
+}</pre>
+          </div>
+          
+          <h3 id="badge">Trust Badge SVG</h3>
+          <div class="code-block">
+            <div class="code-header">
+              <span>Request</span>
+              <button onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><span class="method">GET</span> /api/badge/<span class="endpoint">:agentId</span>.svg</pre>
+          </div>
+          
+          <h3 id="public-stats">Public Statistics</h3>
+          <div class="code-block">
+            <div class="code-header">
+              <span>Request</span>
+              <button onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><span class="method">GET</span> /api/public/stats</pre>
+          </div>
+        </section>
+
+        <section id="errors">
+          <h2>Error Codes</h2>
+          <div class="response-box">
+            <h4><span class="status-badge payment">402</span> Payment Required</h4>
+            <pre>{ <span class="key">"error"</span>: <span class="string">"Payment required"</span>, <span class="key">"payment"</span>: {...} }</pre>
+          </div>
+          <div class="response-box">
+            <h4><span class="status-badge error">401</span> Unauthorized</h4>
+            <pre>{ <span class="key">"error"</span>: <span class="string">"Unauthorized"</span> }</pre>
+          </div>
+          <div class="response-box">
+            <h4><span class="status-badge error">429</span> Rate Limited</h4>
+            <pre>{ <span class="key">"error"</span>: <span class="string">"Rate limit exceeded"</span> }</pre>
+          </div>
+        </section>
+
+        <section id="rates">
+          <h2>Rate Limits</h2>
+          <div class="response-box">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border);">
+                  <th style="text-align: left; padding: 0.75rem;">Tier</th>
+                  <th style="text-align: right; padding: 0.75rem;">Requests/Day</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 0.75rem;">Free</td><td style="text-align: right; padding: 0.75rem;">100</td></tr>
+                <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 0.75rem;">x402 Single ($1)</td><td style="text-align: right; padding: 0.75rem;">1</td></tr>
+                <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 0.75rem;">x402 Basic ($10)</td><td style="text-align: right; padding: 0.75rem;">50</td></tr>
+                <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 0.75rem;">x402 Pro ($50)</td><td style="text-align: right; padding: 0.75rem;">500</td></tr>
+                <tr><td style="padding: 0.75rem;">x402 Enterprise ($200)</td><td style="text-align: right; padding: 0.75rem;">Unlimited</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 AlliGo - The Credit Bureau for AI Agents</p>
+  </footer>
+
+  <script>
+    const API_BASE = window.location.origin + '/api';
+    
+    async function tryAgentScore(e) {
+      e.preventDefault();
+      const agentId = document.getElementById('agentId').value;
+      const resultDiv = document.getElementById('scoreResult');
+      const output = document.getElementById('scoreOutput');
+      
+      resultDiv.classList.add('show');
+      output.textContent = 'Loading...';
+      
+      try {
+        const response = await fetch(`${API_BASE}/public/agents/${encodeURIComponent(agentId)}/score`);
+        const data = await response.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        output.textContent = 'Error: ' + err.message;
+      }
+      return false;
+    }
+    
+    function copyCode(button) {
+      const code = button.closest('.code-block').querySelector('pre').textContent;
+      navigator.clipboard.writeText(code);
+      button.textContent = 'Copied!';
+      setTimeout(() => button.textContent = 'Copy', 2000);
+    }
+  </script>
+</body>
+</html>
