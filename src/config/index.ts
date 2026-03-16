@@ -140,6 +140,77 @@ export function ensureDatabaseDir(): void {
   }
 }
 
+// Check and log volume mount status at startup (CRITICAL for Railway persistence)
+export function checkAndLogVolumeStatus(): { 
+  isMounted: boolean; 
+  expectedPath: string; 
+  actualPath: string;
+  ephemeral: boolean;
+} {
+  const expectedPath = "/app/data";
+  const isProduction = config.nodeEnv === "production";
+  const isMounted = isProduction ? existsSync(expectedPath) : true;
+  const ephemeral = isProduction && !isMounted;
+  
+  if (isProduction) {
+    if (isMounted) {
+      console.log(`\n✅ PERSISTENCE: Volume mounted at ${expectedPath}`);
+      console.log(`   Database: ${config.databasePath}`);
+      console.log(`   Data WILL persist across redeploys\n`);
+    } else {
+      console.error(`\n⚠️  PERSISTENCE WARNING: Volume NOT mounted at ${expectedPath}`);
+      console.error(`   Current database: ${config.databasePath}`);
+      console.error(`   ⚠️  DATA WILL NOT PERSIST ACROSS REDEPLOYS!`);
+      console.error(`   `);
+      console.error(`   → RAILWAY DASHBOARD STEPS:`);
+      console.error(`   1. Go to AlliGo service → Volumes tab`);
+      console.error(`   2. Click "+ New Volume"`);
+      console.error(`   3. Name: alligo-data`);
+      console.error(`   4. Mount Path: /app/data`);
+      console.error(`   5. Size: 1GB (default)`);
+      console.error(`   6. Click "Attach" → Service restarts automatically`);
+      console.error(`   7. Verify: GET /api/admin/db-status should show databasePath: "/app/data/alligo.db"\n`);
+    }
+  } else {
+    console.log(`\n📁 Development mode: Using local database at ${config.databasePath}\n`);
+  }
+  
+  return {
+    isMounted,
+    expectedPath,
+    actualPath: config.databasePath,
+    ephemeral,
+  };
+}
+
+// Check if persistent volume is mounted (for Railway)
+export function checkVolumeMount(): { 
+  isMounted: boolean; 
+  expectedPath: string; 
+  actualPath: string;
+  warning?: string;
+} {
+  const expectedPath = "/app/data";
+  const isProduction = config.nodeEnv === "production";
+  const isMounted = isProduction ? existsSync(expectedPath) : true;
+  
+  let warning: string | undefined;
+  if (isProduction && !isMounted) {
+    warning = `⚠️  WARNING: Volume not mounted at ${expectedPath}. Using ephemeral storage - data will NOT persist across redeploys!`;
+    console.warn(warning);
+    console.warn("   → Go to Railway Dashboard → Volumes tab → Create volume 'alligo-data' → Mount at /app/data");
+  } else if (isProduction && isMounted) {
+    console.log(`✅ Persistent volume mounted at ${expectedPath}`);
+  }
+  
+  return {
+    isMounted,
+    expectedPath,
+    actualPath: config.databasePath,
+    warning,
+  };
+}
+
 // Validate configuration
 export function validateConfig(): { valid: boolean; errors: string[] } {
   const errors: string[] = [];

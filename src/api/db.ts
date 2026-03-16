@@ -12,10 +12,13 @@ import {
   Resolution,
   ClaimSource,
 } from "../schema/claim";
-import { config, ensureDatabaseDir } from "../config";
+import { config, ensureDatabaseDir, checkVolumeMount } from "../config";
 
 // Ensure database directory exists before creating DB
 ensureDatabaseDir();
+
+// Check if persistent volume is mounted (logs warning if not)
+const volumeStatus = checkVolumeMount();
 
 // Initialize database with persistent storage
 const db = new Database(config.databasePath, { create: true });
