@@ -1804,12 +1804,22 @@ if (score.grade === 'F' || score.grade === 'D') {
     <p>Join platforms using AlliGo to verify agent trustworthiness. Free tier available — no credit card required.</p>
     
     <!-- Final CTA Form -->
-    <form class="email-form" id="final-form" onsubmit="return handleFinalSubmit(event)" style="max-width: 450px;">
+    <form class="email-form" id="final-form" onsubmit="return handleFreeKeySignup(event)" style="max-width: 450px;">
       <input type="email" class="email-input" name="email" placeholder="Enter your email" required>
-      <button type="submit" class="btn btn-primary btn-large">Get Free API Key →</button>
-      <input type="hidden" name="source" value="landing_page">
+      <button type="submit" class="btn btn-primary btn-large" id="final-submit-btn">Get Free API Key →</button>
+      <input type="hidden" name="source" value="landing_page_final">
       <div class="form-message" id="final-message"></div>
     </form>
+    
+    <!-- API Key Display (hidden by default) -->
+    <div id="api-key-display" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--accent); border-radius: 12px; max-width: 500px; margin-left: auto; margin-right: auto;">
+      <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Your Free API Key:</div>
+      <div style="font-family: monospace; font-size: 1rem; color: var(--accent); word-break: break-all; background: rgba(0,255,136,0.1); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem;" id="api-key-value"></div>
+      <div style="font-size: 0.875rem; color: var(--text-secondary);">
+        <strong>Limits:</strong> 100 requests/day • Public endpoints only<br>
+        <strong>Upgrade:</strong> <a href="#pricing" style="color: var(--accent);">Pro Plan</a> for unlimited access
+      </div>
+    </div>
     
     <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
       <a href="https://t.me/alligo_alerts" class="btn btn-secondary btn-large">Join Telegram Alerts</a>
@@ -2001,6 +2011,81 @@ if (score.grade === 'F' || score.grade === 'D') {
       });
     });
     
+    // ==================== Analytics Tracking ====================
+    
+    const ANALYTICS_EVENTS = {
+      MODAL_OPEN: 'x402_modal_opened',
+      FORM_SUBMIT: 'form_submitted',
+      CTA_CLICK: 'cta_clicked',
+      SCROLL_DEPTH: 'scroll_depth'
+    };
+    
+    function trackEvent(eventName, data = {}) {
+      // Send to our analytics endpoint (can be extended)
+      const eventData = {
+        event: eventName,
+        timestamp: Date.now(),
+        url: window.location.pathname,
+        ...data
+      };
+      
+      // Log to console for debugging (remove in production or send to analytics service)
+      console.log('📊 Analytics:', eventName, data);
+      
+      // Store locally for later retrieval
+      try {
+        const events = JSON.parse(localStorage.getItem('alligo_analytics') || '[]');
+        events.push(eventData);
+        // Keep only last 100 events
+        if (events.length > 100) events.shift();
+        localStorage.setItem('alligo_analytics', JSON.stringify(events));
+      } catch (e) {}
+      
+      // Send to backend for persistence
+      fetch(API_BASE + '/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData)
+      }).catch(() => {}); // Silent fail
+    }
+    
+    // Track modal opens
+    const originalOpenX402Modal = openX402Modal;
+    openX402Modal = function() {
+      trackEvent(ANALYTICS_EVENTS.MODAL_OPEN, { source: 'blurred_card' });
+      originalOpenX402Modal();
+    };
+    
+    // Track scroll depth
+    let maxScrollDepth = 0;
+    window.addEventListener('scroll', () => {
+      const depth = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+      if (depth > maxScrollDepth && depth % 25 === 0) {
+        maxScrollDepth = depth;
+        trackEvent(ANALYTICS_EVENTS.SCROLL_DEPTH, { depth });
+      }
+    });
+    
+    // Track CTA clicks
+    document.querySelectorAll('.btn-primary, .nav-cta').forEach(btn => {
+      btn.addEventListener('click', function() {
+        trackEvent(ANALYTICS_EVENTS.CTA_CLICK, { 
+          text: this.textContent.trim().slice(0, 50),
+          href: this.href || null
+        });
+      });
+    });
+    
+    // Track form submissions with source
+    const originalSubmitForm = submitForm;
+    submitForm = async function(endpoint, formData, messageId, button) {
+      trackEvent(ANALYTICS_EVENTS.FORM_SUBMIT, { 
+        endpoint, 
+        source: formData.get('source') || 'unknown' 
+      });
+      return originalSubmitForm(endpoint, formData, messageId, button);
+    };
+    
     // Hero form submit handler
     function handleHeroSubmit(e) {
       e.preventDefault();
@@ -2008,6 +2093,86 @@ if (score.grade === 'F' || score.grade === 'D') {
       const formData = new FormData(form);
       const button = form.querySelector('button');
       return submitForm('/leads', formData, 'hero-message', button);
+    }
+    
+    // Page visibility tracking
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        trackEvent('page_leave', { scroll_depth: maxScrollDepth });
+      }
+    });
+    
+    // ==================== Free API Key Signup ====================
+    
+    async function handleFreeKeySignup(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const button = document.getElementById('final-submit-btn');
+      const messageEl = document.getElementById('final-message');
+      const input = form.querySelector('input[type="email"]');
+      
+      // Reset state
+      messageEl.className = 'form-message';
+      messageEl.textContent = '';
+      input.className = 'email-input';
+      button.disabled = true;
+      button.textContent = 'Creating API Key...';
+      
+      try {
+        const response = await fetch(API_BASE + '/signup/free', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.get('email'),
+            source: formData.get('source')
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Show success message
+          messageEl.className = 'form-message success';
+          messageEl.textContent = '🎉 API key created! Save it below.';
+          input.className = 'email-input success';
+          
+          // Show API key display
+          document.getElementById('api-key-display').style.display = 'block';
+          document.getElementById('api-key-value').textContent = data.api_key;
+          
+          // Hide the form
+          form.style.display = 'none';
+          
+          // Track conversion
+          trackEvent('api_key_created', { tier: 'free' });
+          
+          // Copy to clipboard on click
+          document.getElementById('api-key-value').style.cursor = 'pointer';
+          document.getElementById('api-key-value').title = 'Click to copy';
+          document.getElementById('api-key-value').addEventListener('click', function() {
+            navigator.clipboard.writeText(data.api_key);
+            this.textContent = '✓ Copied to clipboard!';
+            setTimeout(() => {
+              this.textContent = data.api_key;
+            }, 2000);
+          });
+        } else {
+          messageEl.className = 'form-message error';
+          messageEl.textContent = data.error || 'Something went wrong. Please try again.';
+          input.className = 'email-input error';
+          button.disabled = false;
+          button.textContent = 'Get Free API Key →';
+        }
+      } catch (err) {
+        messageEl.className = 'form-message error';
+        messageEl.textContent = 'Network error. Please try again.';
+        input.className = 'email-input error';
+        button.disabled = false;
+        button.textContent = 'Get Free API Key →';
+      }
+      
+      return false;
     }
   </script>
 </body>

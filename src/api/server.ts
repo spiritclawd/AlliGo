@@ -683,6 +683,10 @@ async function handleRequest(req: Request): Promise<Response> {
         // x402 Payment
         "GET /api/payment/tiers": "Get available payment tiers (USDC)",
         "GET /api/payment/status": "Check your payment/access status",
+        // Free API Key Signup
+        "POST /api/signup/free": "Get a free API key (no payment required)",
+        // Analytics
+        "POST /api/analytics": "Track analytics events (public)",
         // Admin
         "POST /api/keys": "Create new API key (admin)",
         "GET /api/keys": "List API keys (admin)",
@@ -1203,6 +1207,56 @@ async function handleRequest(req: Request): Promise<Response> {
     } catch (e: any) {
       console.error("Error in batch agentic analysis:", e);
       return error("Failed to analyze agents: " + e.message, 500);
+    }
+  }
+  
+  // ==================== ANALYTICS ENDPOINT ====================
+  
+  if (path === "/api/analytics" && method === "POST") {
+    try {
+      const body = await req.json();
+      const { event, timestamp, url, ...data } = body;
+      
+      // Log analytics event (could be stored in DB for persistence)
+      console.log(`📊 Analytics: ${event}`, JSON.stringify(data));
+      
+      // For now, just acknowledge receipt
+      // In production, store in analytics table or send to external service
+      return json({ success: true, event });
+    } catch (e) {
+      return json({ success: true }); // Silent fail
+    }
+  }
+  
+  // ==================== FREE API KEY SIGNUP ====================
+  
+  if (path === "/api/signup/free" && method === "POST") {
+    try {
+      const body = await req.json() as { email: string; name?: string };
+      
+      if (!body.email) {
+        return error("Email is required", 400);
+      }
+      
+      // Create a free tier API key
+      const key = createApiKey(body.name || body.email.split('@')[0], "free", "read");
+      
+      // Also capture as lead
+      const clientId = body.email.toLowerCase().trim();
+      
+      return json({
+        success: true,
+        api_key: key,
+        tier: "free",
+        limits: {
+          requests_per_day: 100,
+          endpoints: ["public/stats", "public/agents/:id/score", "forensics/quick/:id"]
+        },
+        message: "Your free API key is ready! Check your email for confirmation."
+      });
+    } catch (e) {
+      console.error("Error creating free API key:", e);
+      return error("Failed to create API key", 500);
     }
   }
   

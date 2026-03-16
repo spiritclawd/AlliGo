@@ -1,0 +1,18 @@
+# Nixpacks configuration for Railway
+# Use this if Dockerfile builds fail
+
+[phases.setup]
+nixPkgs = ["bun"]
+
+[phases.install]
+cmds = ["bun install"]
+
+[phases.build]
+cmds = ["echo 'No build step needed'"]
+
+[start]
+cmd = "bun run src/api/server.ts"
+
+[variables]
+NODE_ENV = "production"
+PORT = "3399"
