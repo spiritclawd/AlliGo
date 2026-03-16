@@ -191,7 +191,7 @@ export function generatePaymentResponse(
 
 /**
  * Verify payment from X-Payment header
- * In production, this would verify on-chain transaction
+ * Now integrates with on-chain verification
  */
 export async function verifyPayment(
   clientId: string,
@@ -221,22 +221,52 @@ export async function verifyPayment(
       return { valid: false, error: "Transaction already used by another client" };
     }
 
-    // In production, verify on-chain transaction here
-    // For now, we'll accept if the user claims they paid
-    // TODO: Integrate with blockchain RPC to verify actual transfer
-
     const tier = payment.tier || "single_report";
     const tierInfo = PAYMENT_TIERS[tier as keyof typeof PAYMENT_TIERS] || PAYMENT_TIERS.single_report;
 
-    // Create payment record
+    // ON-CHAIN VERIFICATION
+    // Try to verify the payment on-chain
+    let onChainVerified = false;
+    let verificationError: string | undefined;
+    
+    if (config.usdcRecipientAddress) {
+      try {
+        const { verifyOnChainPayment } = await import("./onchain-verify");
+        
+        const verification = await verifyOnChainPayment(
+          payment.txHash,
+          tierInfo.priceUsdCents,
+          config.usdcRecipientAddress,
+          payment.chain,
+          15000 // 15 second timeout
+        );
+        
+        if (verification.verified) {
+          onChainVerified = true;
+          console.log(`[x402] ✅ On-chain payment verified: ${payment.txHash}`);
+        } else {
+          verificationError = verification.error;
+          console.log(`[x402] ⚠️ On-chain verification failed: ${verification.error}`);
+          
+          // For MVP: Fall back to manual verification
+          // In production, you may want to reject unverified payments
+          console.log(`[x402] Falling back to manual verification for ${payment.txHash}`);
+        }
+      } catch (e: any) {
+        verificationError = e.message;
+        console.error(`[x402] On-chain verification error:`, e.message);
+      }
+    }
+
+    // Create payment record (verified=1 for on-chain verified, verified=0 for manual review)
     const validUntil = tierInfo.daysValid
       ? Date.now() + (tierInfo.daysValid * 24 * 60 * 60 * 1000)
       : null;
 
     const result = db.prepare(`
       INSERT INTO x402_payments
-      (client_id, tx_hash, chain, amount_usd_cents, tier, requests_granted, valid_until, verified)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+      (client_id, tx_hash, chain, amount_usd_cents, tier, requests_granted, valid_until, verified, metadata)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       clientId,
       payment.txHash,
@@ -244,14 +274,24 @@ export async function verifyPayment(
       tierInfo.priceUsdCents,
       tier,
       tierInfo.requests,
-      validUntil
+      validUntil,
+      onChainVerified ? 1 : 0, // Mark as verified only if on-chain verified
+      JSON.stringify({ 
+        manualReview: !onChainVerified,
+        verificationError 
+      })
     );
 
     const record = db.prepare(
       "SELECT * FROM x402_payments WHERE id = ?"
     ).get(result.lastInsertRowid) as PaymentRecord;
 
-    return { valid: true, record };
+    // For MVP: Accept payments even without on-chain verification
+    // They'll be flagged for manual review
+    return { 
+      valid: true, 
+      record 
+    };
   } catch (e: any) {
     return { valid: false, error: e.message || "Invalid payment proof format" };
   }

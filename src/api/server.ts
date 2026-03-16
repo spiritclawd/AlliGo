@@ -2109,8 +2109,19 @@ printConfig();
 
 // CRITICAL: Check volume mount status at startup
 import { checkAndLogVolumeStatus, ensureDatabaseDir } from "../config";
+import { existsSync } from "fs";
 ensureDatabaseDir();
-checkAndLogVolumeStatus();
+const volumeStatus = checkAndLogVolumeStatus();
+
+// Additional persistence verification
+const dbPath = config.databasePath;
+const dbExists = existsSync(dbPath);
+console.log(`\n📦 PERSISTENCE STATUS:`);
+console.log(`   Volume mounted: ${volumeStatus.isMounted ? '✅ YES' : '❌ NO'}`);
+console.log(`   Database path: ${dbPath}`);
+console.log(`   DB file exists: ${dbExists ? '✅ YES' : '❌ NO (will be created)'}`);
+console.log(`   Ephemeral mode: ${volumeStatus.ephemeral ? '⚠️  YES - DATA AT RISK!' : '✅ NO - Persistent storage active'}`);
+console.log("");
 
 // Seed data on startup
 seedData();

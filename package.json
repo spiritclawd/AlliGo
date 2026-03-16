@@ -1,6 +1,6 @@
 {
   "name": "alligo",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "description": "The Credit Bureau for AI Agents - Track failures, losses, and disputes",
   "main": "src/api/server.ts",
   "scripts": {
@@ -19,7 +19,9 @@
     "autonomous-agents",
     "credit-bureau",
     "agent-risk",
-    "ai-failures"
+    "ai-failures",
+    "x402",
+    "usdc"
   ],
   "author": "AlliGo",
   "license": "MIT",
@@ -31,6 +33,7 @@
     "bun": ">=1.0.0"
   },
   "dependencies": {
+    "ethers": "^6.13.0",
     "stripe": "^20.4.1"
   },
   "devDependencies": {}
