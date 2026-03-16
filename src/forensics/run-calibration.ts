@@ -6,7 +6,7 @@
  */
 
 import { generateComprehensiveTestSuite, SyntheticTestCase } from "./synthetic-generator";
-import { analyzeAgenticInternals, AgenticArchetype, AgenticForensicsReport } from "./agentic-internals";
+import { analyzeAgenticInternals, AgenticArchetype, AgenticForensicsReport, ARCHETYPE_THRESHOLDS } from "./agentic-internals";
 
 interface CalibrationMetrics {
   total_tests: number;
@@ -115,7 +115,10 @@ async function runCalibration(): Promise<CalibrationMetrics> {
         const detectedArchetypes = result.behavioral_archetypes || [];
         const match = detectedArchetypes.find(d => d.archetype === expectedArchetype);
         
-        if (match && match.probability >= 30) {
+        // Use archetype-specific threshold
+        const archetypeThreshold = ARCHETYPE_THRESHOLDS[expectedArchetype as AgenticArchetype] || 30;
+        
+        if (match && match.probability >= archetypeThreshold) {
           correct++;
           byDifficulty[testCase.difficulty].correct++;
           archetypeMetrics[expectedArchetype].correct++;
@@ -129,7 +132,8 @@ async function runCalibration(): Promise<CalibrationMetrics> {
           
           // Check if wrong archetype was detected (false positive for that archetype)
           const topDetection = detectedArchetypes[0];
-          if (topDetection && topDetection.probability >= 30) {
+          const topArchetypeThreshold = topDetection ? ARCHETYPE_THRESHOLDS[topDetection.archetype as AgenticArchetype] || 30 : 30;
+          if (topDetection && topDetection.probability >= topArchetypeThreshold) {
             archetypeMetrics[topDetection.archetype].false_positives++;
           }
           
