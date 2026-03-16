@@ -2431,14 +2431,10 @@ let redisStatus = { connected: false, keys: 0 };
 // Seed data on startup
 seedData();
 
-// Start server
-const server = serve({
-  port: config.port,
-  hostname: config.host,
-  fetch: handleRequest,
-});
+// NOTE: Server is started in main() function at the end of this file
+// This avoids duplicate serve() calls that cause EADDRINUSE errors
 
-console.log("🛡️  AlliGo Server Started");
+console.log("🛡️  AlliGo Server Initializing...");
 console.log("   Port: " + config.port);
 console.log("   Database: " + config.databasePath);
 console.log("   Claims: " + countClaims());
@@ -3122,10 +3118,11 @@ async function main() {
   // Seed data if empty
   seedData();
   
-  // Start server
+  // Start server with reusePort to handle rapid restarts on Railway
   const server = serve({
     port: config.port,
     hostname: config.host,
+    reusePort: true, // Allow quick restarts without EADDRINUSE error
     fetch: handleRequest,
   });
   

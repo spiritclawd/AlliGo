@@ -21,13 +21,14 @@ RUN mkdir -p /app/data
 # Set environment
 ENV NODE_ENV=production
 ENV DATABASE_PATH=/app/data/alligo.db
+ENV PORT=3399
 
-# Expose port
+# Expose port (Railway overrides with its own PORT)
 EXPOSE 3399
 
-# Health check
+# Health check - use PORT environment variable
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3399/health || exit 1
+  CMD curl -f http://localhost:${PORT:-3399}/health || exit 1
 
 # Run the server
 CMD ["bun", "run", "src/api/server.ts"]
