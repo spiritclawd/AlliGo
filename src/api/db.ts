@@ -335,6 +335,24 @@ function rowToClaim(row: any): AgentClaim {
   };
 }
 
+// Patch a claim's on-chain fields (admin only)
+export function patchClaimOnChain(id: string, fields: {
+  txHash?: string;
+  contractAddress?: string;
+  chain?: string;
+}): boolean {
+  const updates: string[] = [];
+  const values: (string | null)[] = [];
+  if (fields.txHash !== undefined) { updates.push("txHash = ?"); values.push(fields.txHash); }
+  if (fields.contractAddress !== undefined) { updates.push("contractAddress = ?"); values.push(fields.contractAddress); }
+  if (fields.chain !== undefined) { updates.push("chain = ?"); values.push(fields.chain); }
+  if (updates.length === 0) return false;
+  values.push(id);
+  const stmt = db.prepare(`UPDATE claims SET ${updates.join(", ")} WHERE id = ?`);
+  const result = stmt.run(...values);
+  return result.changes > 0;
+}
+
 // Delete a claim by ID (admin only)
 export function deleteClaimById(id: string): boolean {
   const stmt = db.prepare("DELETE FROM claims WHERE id = ?");

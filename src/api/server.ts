@@ -31,6 +31,7 @@ import {
   isDatabaseEmpty,
   searchClaims,
   deleteClaimById,
+  patchClaimOnChain,
   ApiKey,
 } from "./db";
 import {
@@ -842,6 +843,32 @@ async function handleRequest(req: Request): Promise<Response> {
       return json({ success: true, calibration: result });
     } catch (e) {
       return json({ success: false, error: "Invalid calibration data" }, 400);
+    }
+  }
+
+  // Patch claim on-chain fields (admin only) — used by Zaia tx_enricher
+  const patchClaimMatch = path.match(/^\/api\/admin\/claims\/([^/]+)$/);
+  if (patchClaimMatch && method === "PATCH") {
+    const authCheck = requireAuth(req, "admin");
+    if (!authCheck.valid) return authCheck.response!;
+    const claimId = patchClaimMatch[1];
+    try {
+      const body = await req.json();
+      const fields: { txHash?: string; contractAddress?: string; chain?: string } = {};
+      if (body.tx_hash) fields.txHash = body.tx_hash;
+      if (body.contract_address) fields.contractAddress = body.contract_address;
+      if (body.chain) fields.chain = body.chain;
+      if (Object.keys(fields).length === 0) {
+        return json({ success: false, error: "No patchable fields provided" }, 400);
+      }
+      const patched = patchClaimOnChain(claimId, fields);
+      if (!patched) {
+        return json({ success: false, error: `Claim ${claimId} not found` }, 404);
+      }
+      console.log(`[admin] Patched claim ${claimId}: ${JSON.stringify(fields)}`);
+      return json({ success: true, patched: claimId, fields });
+    } catch (e) {
+      return json({ success: false, error: "Invalid patch body" }, 400);
     }
   }
 
