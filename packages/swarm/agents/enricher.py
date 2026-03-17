@@ -32,7 +32,7 @@ ALLIGO_ADMIN_KEY = os.environ.get("ALLIGO_ADMIN_KEY", "")
 # Free public RPCs — no API keys needed
 RPCS = {
     "ethereum": "https://ethereum.publicnode.com",
-    "base":     "https://mainnet.base.org",
+    "base":     "https://base.publicnode.com",  # mainnet.base.org returns 403
     "solana":   "https://api.mainnet-beta.solana.com",
 }
 
