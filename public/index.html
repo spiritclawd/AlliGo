@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AlliGo - The Credit Bureau for AI Agents | Check Agent Risk Before You Trust</title>
-  <meta name="description" content="Before trusting an AI agent with your money, check their AlliGo score. The first reputation system tracking $72M+ in AI agent failures.">
+  <meta name="description" content="Before trusting an AI agent with your money, check their AlliGo score. The first reputation system tracking $4B+ in AI agent failures.">
   <meta property="og:title" content="AlliGo - The Credit Bureau for AI Agents">
-  <meta property="og:description" content="AI agents lost $72M+ in 2025. Check their risk score before you trust them.">
+  <meta property="og:description" content="AI agents lost $4B+ in recent incidents. Check their risk score before you trust them.">
   <meta property="og:type" content="website">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1266,7 +1266,7 @@
         <div class="stat-label">Claims Tracked</div>
       </div>
       <div class="stat">
-        <div class="stat-value" id="totalValue">$73M+</div>
+        <div class="stat-value" id="totalValue">$4B+</div>
         <div class="stat-label">Value Lost</div>
       </div>
       <div class="stat">
@@ -1969,8 +1969,10 @@ if (score.grade === 'F' || score.grade === 'D') {
           const totalClaims = data.stats.totalClaims;
           const totalValue = data.stats.totalValueLost;
           document.getElementById('totalClaims').textContent = totalClaims;
-          if (totalValue > 1000000) {
-            document.getElementById('totalValue').textContent = '$' + (totalValue / 1000000).toFixed(0) + 'M+';
+          if (totalValue >= 1_000_000_000) {
+            document.getElementById('totalValue').textContent = '$' + (totalValue / 1_000_000_000).toFixed(1) + 'B+';
+          } else if (totalValue > 1_000_000) {
+            document.getElementById('totalValue').textContent = '$' + (totalValue / 1_000_000).toFixed(0) + 'M+';
           }
         }
       })
