@@ -63,6 +63,12 @@
       "schedule_minutes": 60,
       "script": "agents/virtuals_monitor.py",
       "description": "Monitors Virtuals Protocol for new agent deployments, auto-scores and submits high-risk claims"
+    },
+    "telegram_ingest": {
+      "enabled": true,
+      "schedule_minutes": 30,
+      "script": "agents/telegram_ingest.py",
+      "description": "Polls @alligo_alerts channel and @alligoBot for user-submitted drain reports, submits new claims to AlliGo"
     }
   },
   "sources": {
