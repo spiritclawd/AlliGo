@@ -1169,10 +1169,13 @@ async function handleRequest(req: Request): Promise<Response> {
         },
       });
 
-      const topRisk = report.riskAssessment || {};
-      const archetypeHit = report.archetypeMatches?.[0] || null;
+      // Engine returns behavioral_archetypes (not archetypeMatches)
+      const archetypes = report.behavioral_archetypes || report.archetypeMatches || [];
+      const archetypeHit = archetypes[0] || null;
       const confidence = archetypeHit?.confidence ?? 0;
       const archetype = archetypeHit?.archetype ?? "CLEAN";
+      // Risk score: use overall_risk_score (0-100 scale) or riskAssessment.score
+      const rawRiskScore = report.overall_risk_score ?? report.riskAssessment?.score ?? null;
       const severityLabel = confidence >= 0.8 ? "HIGH" : confidence >= 0.5 ? "MEDIUM" : "LOW";
 
       const result: Record<string, any> = {
@@ -1182,10 +1185,11 @@ async function handleRequest(req: Request): Promise<Response> {
           archetype,
           confidence,
           severity: severityLabel,
-          riskScore: topRisk.score ?? null,
-          archetypeMatches: report.archetypeMatches || [],
-          indicators: archetypeHit?.indicators || [],
-          summary: report.summary || null,
+          riskScore: rawRiskScore,
+          archetypeMatches: archetypes,
+          indicators: archetypeHit?.evidence || archetypeHit?.indicators || [],
+          summary: report.summary || report.key_agentic_negatives?.[0]?.description || null,
+          grade: report.grade || null,
         },
         action: "analyzed",
         timestamp: new Date().toISOString(),
