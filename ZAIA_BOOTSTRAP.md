@@ -75,8 +75,10 @@ TELEGRAM_BOT_TOKEN        # @alligoBot token
 AGENTMAIL_API_KEY         # spirit@agentmail.to
 EAS_PRIVATE_KEY           # TaskMarket wallet private key (Base)
 EAS_SCHEMA_UID            # 0x24a11bf9f247fa2e0129c6b1036c7ea0b0e186aea6f36ee27499aac749640210
-EAS_ATTESTER_ADDRESS      # 0x62400977fcB35c46F5594eb01063d6B26C942157
-EAS_MODE                  # offchain (flip to onchain once wallet has ETH)
+EAS_ATTESTER_ADDRESS      # 0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d (plain EOA, created 2026-03-17)
+EAS_MODE                  # offchain (flip to onchain once wallet has ETH on Base)
+# NOTE: Old TaskMarket address 0x62400977... is an EIP-7702 smart account — ETH sent to it
+# is forwarded by the contract's receive() function. Use the new plain EOA above instead.
 FORENSICS_MODEL           # meta-llama/llama-3.3-70b-instruct
 FORENSICS_MODEL_CHEAP     # meta-llama/llama-3.1-8b-instruct
 ```
@@ -150,7 +152,9 @@ The core MOAT. Located at `/home/computer/alligo/src/forensics/`.
 - **Current mode**: OFFCHAIN (free, signed locally by TaskMarket wallet)
 - **Attester wallet**: `0x62400977fcB35c46F5594eb01063d6B26C942157` (needs ETH for onchain)
 - **47+ attestations** created and signed
-- **To flip onchain**: Fund wallet with ~0.005 ETH on Base, then:
+- **NEW plain EOA signer**: `0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d` (created 2026-03-17, keys in `.env`)
+- **Old TaskMarket address** `0x62400977...` is an EIP-7702 smart account — ETH sent to it is forwarded by contract logic. Do NOT use for gas.
+- **To flip onchain**: Fund `0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d` with ~0.005 ETH on Base, then:
   ```bash
   cd /home/computer/alligo && ~/.bun/bin/bun run src/attestation/register-schema.ts
   # Then update EAS_MODE=onchain in Railway env vars
