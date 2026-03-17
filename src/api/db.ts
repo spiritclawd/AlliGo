@@ -82,6 +82,11 @@ db.run(`CREATE INDEX IF NOT EXISTS idx_claims_type ON claims(claimType)`);
 db.run(`CREATE INDEX IF NOT EXISTS idx_claims_category ON claims(category)`);
 db.run(`CREATE INDEX IF NOT EXISTS idx_claims_chain ON claims(chain)`);
 
+// Migration: add EAS attestation columns (safe — ADD COLUMN is idempotent via try/catch)
+try { db.run("ALTER TABLE claims ADD COLUMN easUid TEXT"); } catch {}
+try { db.run("ALTER TABLE claims ADD COLUMN easVerifyUrl TEXT"); } catch {}
+try { db.run("ALTER TABLE claims ADD COLUMN easMode TEXT"); } catch {}
+
 // Create API keys table
 db.run(`
   CREATE TABLE IF NOT EXISTS api_keys (
@@ -332,20 +337,29 @@ function rowToClaim(row: any): AgentClaim {
     tags: row.tags ? JSON.parse(row.tags) : undefined,
     platform: row.platform || undefined,
     agentVersion: row.agentVersion || undefined,
+    easUid: row.easUid || undefined,
+    easVerifyUrl: row.easVerifyUrl || undefined,
+    easMode: row.easMode || undefined,
   };
 }
 
-// Patch a claim's on-chain fields (admin only)
+// Patch a claim's on-chain and EAS fields (admin only)
 export function patchClaimOnChain(id: string, fields: {
   txHash?: string;
   contractAddress?: string;
   chain?: string;
+  eas_uid?: string;
+  eas_verify_url?: string;
+  eas_mode?: string;
 }): boolean {
   const updates: string[] = [];
   const values: (string | null)[] = [];
   if (fields.txHash !== undefined) { updates.push("txHash = ?"); values.push(fields.txHash); }
   if (fields.contractAddress !== undefined) { updates.push("contractAddress = ?"); values.push(fields.contractAddress); }
   if (fields.chain !== undefined) { updates.push("chain = ?"); values.push(fields.chain); }
+  if (fields.eas_uid !== undefined) { updates.push("easUid = ?"); values.push(fields.eas_uid); }
+  if (fields.eas_verify_url !== undefined) { updates.push("easVerifyUrl = ?"); values.push(fields.eas_verify_url); }
+  if (fields.eas_mode !== undefined) { updates.push("easMode = ?"); values.push(fields.eas_mode); }
   if (updates.length === 0) return false;
   values.push(id);
   const stmt = db.prepare(`UPDATE claims SET ${updates.join(", ")} WHERE id = ?`);

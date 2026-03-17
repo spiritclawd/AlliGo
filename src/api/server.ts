@@ -854,10 +854,13 @@ async function handleRequest(req: Request): Promise<Response> {
     const claimId = patchClaimMatch[1];
     try {
       const body = await req.json();
-      const fields: { txHash?: string; contractAddress?: string; chain?: string } = {};
+      const fields: { txHash?: string; contractAddress?: string; chain?: string; eas_uid?: string; eas_verify_url?: string; eas_mode?: string } = {};
       if (body.tx_hash) fields.txHash = body.tx_hash;
       if (body.contract_address) fields.contractAddress = body.contract_address;
       if (body.chain) fields.chain = body.chain;
+      if (body.eas_uid) fields.eas_uid = body.eas_uid;
+      if (body.eas_verify_url) fields.eas_verify_url = body.eas_verify_url;
+      if (body.eas_mode) fields.eas_mode = body.eas_mode;
       if (Object.keys(fields).length === 0) {
         return json({ success: false, error: "No patchable fields provided" }, 400);
       }
