@@ -157,8 +157,9 @@ async function main() {
       failCount++;
     }
 
-    // Small delay between attestations
-    await new Promise(r => setTimeout(r, 500));
+    // Wait 3s between attestations — Base needs to mine/index the previous tx
+    // before the next nonce is valid (500ms caused NONCE_EXPIRED / REPLACEMENT_UNDERPRICED errors)
+    await new Promise(r => setTimeout(r, 3000));
   }
 
   log("\n" + "=".repeat(60));
