@@ -1,0 +1,87 @@
+{
+  "version": "1.0.0",
+  "identity": "Zaia Sentient Protocol",
+  "alligo_api": "https://alligo-production.up.railway.app",
+  "alligo_local": "/home/computer/alligo",
+  "llm": {
+    "endpoint": "http://localhost:8080/v1",
+    "api_key": "zaia",
+    "model": "llama3.2:3b",
+    "model_path": "/home/computer/ollama/models/blobs/sha256-dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff"
+  },
+  "agents": {
+    "crawler": {
+      "enabled": true,
+      "schedule_minutes": 60,
+      "script": "agents/crawler.py",
+      "description": "Discovers new AI agent incidents from public sources"
+    },
+    "forensics": {
+      "enabled": true,
+      "schedule_minutes": 120,
+      "script": "agents/forensics.py",
+      "description": "Runs behavioral analysis on new incidents"
+    },
+    "reporter": {
+      "enabled": true,
+      "schedule_hours": 168,
+      "script": "agents/reporter.py",
+      "description": "Generates weekly Rogue Agent Report via LLM"
+    },
+    "calibrator": {
+      "enabled": true,
+      "schedule_hours": 24,
+      "script": "agents/calibrator.sh",
+      "description": "Runs calibration suite and logs accuracy metrics"
+    },
+    "enricher": {
+      "enabled": true,
+      "schedule_hours": 6,
+      "script": "agents/enricher.py",
+      "description": "Submits verified real incidents with root causes and GitHub evidence"
+    },
+    "tx_enricher": {
+      "enabled": true,
+      "schedule_hours": 12,
+      "script": "agents/tx_enricher.py",
+      "description": "Patches claims with verified on-chain tx hashes scraped from rekt.news"
+    },
+    "eas_attester": {
+      "enabled": true,
+      "schedule_hours": 12,
+      "script": "agents/eas_attester.py",
+      "description": "Creates EAS offchain attestations on Base for all eligible claims"
+    },
+    "agentmail_router": {
+      "enabled": true,
+      "schedule_minutes": 30,
+      "script": "agents/agentmail_router.py",
+      "description": "Polls spirit@agentmail.to, routes incident reports to AlliGo, auto-replies"
+    },
+    "virtuals_monitor": {
+      "enabled": true,
+      "schedule_minutes": 60,
+      "script": "agents/virtuals_monitor.py",
+      "description": "Monitors Virtuals Protocol for new agent deployments, auto-scores and submits high-risk claims"
+    }
+  },
+  "sources": {
+    "rss": [
+      "https://rekt.news/rss",
+      "https://defillama.com/hacks",
+      "https://www.coindesk.com/arc/outboundfeeds/rss/",
+      "https://cointelegraph.com/rss"
+    ],
+    "github_orgs": ["elizaos", "virtuals-io", "ai16z"],
+    "search_queries": [
+      "AI agent exploit loss",
+      "autonomous agent hack defi",
+      "AI trading bot failure",
+      "agent smart contract exploit",
+      "AI agent rug pull",
+      "rogue agent blockchain loss",
+      "LLM agent attack",
+      "autonomous agent security incident"
+    ]
+  }
+}
