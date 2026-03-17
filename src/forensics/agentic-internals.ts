@@ -910,37 +910,81 @@ function detectMemoryPoisoning(input: AgenticDataInput): ArchetypeDetection {
   const evidence: string[] = [];
   const snippets: EvidenceSnippet[] = [];
   let probability = 0;
-  
-  // Check for memory anomalies
+
+  // === SIGNAL PATH 1: Structured memory snapshot anomalies ===
   if (input.direct_agentic_data?.memory_snapshot) {
     for (const entry of input.direct_agentic_data.memory_snapshot) {
       if (entry.anomaly) {
         evidence.push(`Memory anomaly: ${entry.anomaly} for key "${entry.key}"`);
-        probability += 30;
+        probability += 35; // raised: a flagged anomaly is high-confidence
       }
-      
-      // Check for suspicious values
       const valueStr = JSON.stringify(entry.value).toLowerCase();
       for (const pattern of EXPLOIT_PATTERNS) {
         if (pattern.pattern.test(valueStr)) {
           evidence.push(`Suspicious pattern in memory: ${pattern.name}`);
-          snippets.push({
-            source: `Memory: ${entry.key}`,
-            content: valueStr.slice(0, 200)
-          });
+          snippets.push({ source: `Memory: ${entry.key}`, content: valueStr.slice(0, 200) });
           probability += 25;
         }
       }
     }
   }
-  
+
+  // === SIGNAL PATH 2: CoT behavioral patterns (works without structured telemetry) ===
+  if (input.direct_agentic_data?.cot_steps) {
+    const MEMORY_POISON_PATTERNS = [
+      { re: /overw[ri]+ing.*memory|memory.*overw[ri]+/i,              pts: 30, label: "memory overwrite in CoT" },
+      { re: /inject.*context|context.*inject/i,                        pts: 28, label: "context injection" },
+      { re: /corrupt.*state|state.*corrupt/i,                          pts: 28, label: "state corruption" },
+      { re: /replac.*approved|approved.*replac/i,                      pts: 25, label: "approved list replacement" },
+      { re: /false.*memor|memor.*false|fabricat.*memor/i,              pts: 25, label: "false memory fabrication" },
+      { re: /previous.*state.*no longer|ignor.*previous.*context/i,    pts: 20, label: "prior context erasure" },
+      { re: /storing.*new.*param|overrid.*stored/i,                    pts: 18, label: "stored parameter override" },
+      { re: /memory.*snapshot|snapshot.*tamper/i,                      pts: 20, label: "memory snapshot tampering" },
+    ];
+
+    let lastPoisonStep = -1;
+    for (const step of input.direct_agentic_data.cot_steps) {
+      const thought = step.thought;
+      for (const { re, pts, label } of MEMORY_POISON_PATTERNS) {
+        if (re.test(thought)) {
+          evidence.push(`CoT memory poisoning signal: ${label}`);
+          snippets.push({ source: `CoT step ${step.step}`, content: thought.slice(0, 200) });
+          probability += pts;
+          lastPoisonStep = step.step;
+          break; // one signal per step
+        }
+      }
+    }
+
+    // Bonus: poisoning signal followed by a transfer/withdraw = confirmed attack chain
+    if (lastPoisonStep >= 0) {
+      const postPoisonSteps = input.direct_agentic_data.cot_steps.filter(s => s.step > lastPoisonStep);
+      const hasExfil = postPoisonSteps.some(s => /transfer|withdraw|send|drain|extract/i.test(s.thought));
+      if (hasExfil) {
+        evidence.push("Memory poisoning followed by exfiltration action — confirmed attack chain");
+        probability += 20;
+      }
+    }
+  }
+
+  // === SIGNAL PATH 3: Tool calls that suggest memory/state manipulation ===
+  if (input.direct_agentic_data?.tool_calls) {
+    const stateTools = input.direct_agentic_data.tool_calls.filter(t =>
+      /update_memory|set_context|write_state|patch_config|overwrite/i.test(t.tool)
+    );
+    if (stateTools.length >= 2) {
+      evidence.push(`${stateTools.length} state-write tool calls detected (potential memory manipulation)`);
+      probability += 20;
+    }
+  }
+
   return {
     archetype: AgenticArchetype.MEMORY_POISONING,
     probability: Math.min(100, probability),
-    confidence: evidence.length > 0 ? 0.7 : 0,
+    confidence: evidence.length >= 2 ? 0.8 : evidence.length === 1 ? 0.6 : 0,
     evidence,
-    severity: probability >= 40 ? "high" : "medium",
-    snippets
+    severity: probability >= 60 ? "critical" : probability >= 35 ? "high" : "medium",
+    snippets,
   };
 }
 
@@ -948,108 +992,118 @@ function detectCounterpartyCollusion(input: AgenticDataInput): ArchetypeDetectio
   const evidence: string[] = [];
   const snippets: EvidenceSnippet[] = [];
   let probability = 0;
-  
-  // Multi-framework markers to EXCLUDE before flagging collusion
+
+  // Multi-framework markers to EXCLUDE (those belong to Multi_Framework_Collusion)
   const multiFrameworkMarkers = [
     "[langgraph]", "[crewai]", "[autogen]", "[elizaos]",
     "langgraph", "crewai", "autogen", "elizaos",
-    "delegating", "delegation", "handoff", "forwarding",
-    "workflow", "node", "edge", "graph", "state_machine"
+    "workflow", "node", "edge", "graph", "state_machine",
   ];
-  
-  // Check multi-agent messages for collusion patterns
+
+  // === SIGNAL PATH 1: Structured agent messages with coordination anomalies ===
   if (input.direct_agentic_data?.agent_messages) {
     for (const msg of input.direct_agentic_data.agent_messages) {
       if (msg.coordination_anomaly) {
-        // Exclude multi-framework coordination (that's a different archetype)
         const contentLower = msg.content.toLowerCase();
         const isMultiFramework = multiFrameworkMarkers.some(m => contentLower.includes(m));
-        
         if (!isMultiFramework) {
           evidence.push(`Coordination anomaly: ${msg.coordination_anomaly}`);
           probability += 35;
-          snippets.push({
-            source: "Agent message",
-            content: msg.content.slice(0, 150)
-          });
+          snippets.push({ source: "Agent message", content: msg.content.slice(0, 150) });
         }
       }
     }
   }
-  
-  // Check for repeated counterparty mentions in CoT
+
+  // === SIGNAL PATH 2: CoT address repetition (lowered threshold: 2+ with context) ===
   if (input.direct_agentic_data?.cot_steps) {
     const counterparties = new Map<string, number>();
     const counterpartyContexts = new Map<string, string[]>();
-    
+
     for (const step of input.direct_agentic_data.cot_steps) {
-      const addresses = step.thought.match(/0x[a-fA-F0-9]{40}/g) || [];
+      const thought = step.thought;
+      const addresses = thought.match(/0x[a-fA-F0-9]{40}/g) || [];
       for (const addr of addresses) {
         counterparties.set(addr, (counterparties.get(addr) || 0) + 1);
-        if (!counterpartyContexts.has(addr)) {
-          counterpartyContexts.set(addr, []);
-        }
-        counterpartyContexts.get(addr)!.push(step.thought.slice(0, 100));
+        if (!counterpartyContexts.has(addr)) counterpartyContexts.set(addr, []);
+        counterpartyContexts.get(addr)!.push(thought.slice(0, 100));
       }
     }
-    
-    // Check for repeated external wallet interactions (same address 5+ times = stronger signal)
+
     for (const [addr, count] of counterparties) {
       const contexts = counterpartyContexts.get(addr) || [];
-      const hasSuspiciousContext = contexts.some(ctx => 
-        /transfer|send|withdraw|drain|extract|consolidate/i.test(ctx)
+      const hasSuspiciousContext = contexts.some(ctx =>
+        /transfer|send|withdraw|drain|extract|consolidate|coordin/i.test(ctx)
       );
-      
+
       if (count >= 5 && hasSuspiciousContext) {
-        evidence.push(`Frequent suspicious mentions of ${addr.slice(0, 10)}... (${count} times)`);
-        probability += 25;
-        snippets.push({
-          source: "CoT address pattern",
-          content: `Address ${addr.slice(0, 10)}... appears ${count} times with transfer context`
-        });
+        evidence.push(`Suspicious address ${addr.slice(0, 10)}... appears ${count}x with transfer context`);
+        probability += 30;
+        snippets.push({ source: "CoT address pattern", content: `${addr.slice(0, 10)}... × ${count} (transfer context)` });
       } else if (count >= 5) {
-        // Lower probability for single-address mentions without suspicious context
-        evidence.push(`Frequent mentions of address ${addr.slice(0, 10)}... (${count} times)`);
-        probability += 10; // Lowered from 15
-      } else if (count >= 3 && hasSuspiciousContext) {
-        // 3-4 mentions with suspicious context = moderate signal
-        evidence.push(`Address ${addr.slice(0, 10)}... mentioned ${count} times with transfer context`);
+        evidence.push(`Address ${addr.slice(0, 10)}... appears ${count}x in CoT`);
         probability += 15;
+      } else if (count >= 2 && hasSuspiciousContext) {
+        // FIXED: was 3+; 2 mentions with suspicious context is collusion signal
+        evidence.push(`Address ${addr.slice(0, 10)}... mentioned ${count}x with transfer/coordination context`);
+        probability += 20;
+        snippets.push({ source: "CoT address pattern", content: `${addr.slice(0, 10)}... × ${count} (suspicious)` });
+      }
+    }
+
+    // === SIGNAL PATH 3: Behavioral CoT patterns (no structured data needed) ===
+    const COLLUSION_COT_PATTERNS = [
+      { re: /coordinat.*with.*agent|agent.*coordinat/i,                   pts: 22, label: "inter-agent coordination" },
+      { re: /consolidat.*fund|fund.*consolidat/i,                         pts: 25, label: "fund consolidation" },
+      { re: /external.*agent.*instruct|instruct.*external.*agent/i,       pts: 28, label: "external agent instruction" },
+      { re: /split.*transfer|transfer.*split|shard.*payment/i,            pts: 20, label: "split transfer pattern" },
+      { re: /relay.*to|forward.*funds.*to|pass.*fund/i,                   pts: 20, label: "fund relay" },
+      { re: /counterpart.*agent|collu|syndicate/i,                        pts: 30, label: "explicit collusion language" },
+    ];
+
+    for (const step of input.direct_agentic_data.cot_steps) {
+      // Exclude multi-framework steps
+      const isMultiFramework = multiFrameworkMarkers.some(m => step.thought.toLowerCase().includes(m));
+      if (isMultiFramework) continue;
+
+      for (const { re, pts, label } of COLLUSION_COT_PATTERNS) {
+        if (re.test(step.thought)) {
+          evidence.push(`CoT collusion signal: ${label}`);
+          snippets.push({ source: `CoT step ${step.step}`, content: step.thought.slice(0, 200) });
+          probability += pts;
+          break;
+        }
       }
     }
   }
-  
-  // NEW: Check tool calls for repeated interactions with same external address
+
+  // === SIGNAL PATH 4: Tool calls — repeated target address ===
   if (input.direct_agentic_data?.tool_calls) {
     const targetAddresses = new Map<string, number>();
-    
     for (const call of input.direct_agentic_data.tool_calls) {
-      // Extract addresses from params
       const params = JSON.stringify(call.params);
       const addresses = params.match(/0x[a-fA-F0-9]{40}/g) || [];
       for (const addr of addresses) {
         targetAddresses.set(addr, (targetAddresses.get(addr) || 0) + 1);
       }
     }
-    
-    // Flag if same address appears in 3+ tool calls
     for (const [addr, count] of targetAddresses) {
       if (count >= 3) {
-        evidence.push(`Repeated tool calls targeting ${addr.slice(0, 10)}... (${count} times)`);
-        probability += 20;
+        evidence.push(`Tool calls repeatedly target ${addr.slice(0, 10)}... (${count}×)`);
+        probability += 22;
+      } else if (count >= 2) {
+        evidence.push(`Two tool calls target same address ${addr.slice(0, 10)}...`);
+        probability += 12;
       }
     }
   }
-  
-  // NEW: Check for coordinated timing patterns (multiple transfers to same address)
+
+  // === SIGNAL PATH 5: suspicious_calls structured field ===
   if (input.direct_agentic_data?.suspicious_calls) {
     const targets = new Map<string, number>();
     for (const call of input.direct_agentic_data.suspicious_calls) {
-      if (call.target) {
-        targets.set(call.target, (targets.get(call.target) || 0) + 1);
-      }
+      if (call.target) targets.set(call.target, (targets.get(call.target) || 0) + 1);
     }
-    
     for (const [target, count] of targets) {
       if (count >= 2) {
         evidence.push(`${count} suspicious calls to same target ${target.slice(0, 10)}...`);
@@ -1057,14 +1111,14 @@ function detectCounterpartyCollusion(input: AgenticDataInput): ArchetypeDetectio
       }
     }
   }
-  
+
   return {
     archetype: AgenticArchetype.COUNTERPARTY_COLLUSION,
     probability: Math.min(100, probability),
-    confidence: evidence.length > 0 ? 0.65 : 0, // Slightly raised confidence with better signals
+    confidence: evidence.length >= 2 ? 0.75 : evidence.length === 1 ? 0.55 : 0,
     evidence,
-    severity: probability >= 40 ? "high" : "medium",
-    snippets
+    severity: probability >= 50 ? "critical" : probability >= 30 ? "high" : "medium",
+    snippets,
   };
 }
 
@@ -1073,95 +1127,124 @@ function detectMultiFrameworkCollusion(input: AgenticDataInput): ArchetypeDetect
   const snippets: EvidenceSnippet[] = [];
   let probability = 0;
   
-  // Known framework markers in tool calls and CoT
-  const frameworkMarkers = {
-    langgraph: ["[LangGraph]", "graph", "node", "edge", "workflow", "state_machine"],
-    crewai: ["[CrewAI]", "crew", "agent", "task", "delegat", "collaborat"],
-    autogen: ["[AutoGen]", "conversation", "assistant", "user_proxy", "groupchat"],
-    elizaos: ["[ElizaOS]", "character", "provider", "action", "evaluator"],
+  // Framework signature definitions — explicit bracket tags score higher than generic terms
+  const frameworkSignatures: Record<string, { strong: RegExp[]; weak: string[] }> = {
+    langgraph:  { strong: [/\[langgraph\]/i, /entering.*node|leaving.*node/i, /state_machine/i], weak: ["graph", "workflow", "edge"] },
+    crewai:     { strong: [/\[crewai\]/i, /delegating task/i, /crew.*agent/i],                   weak: ["crew", "delegat", "collaborat"] },
+    autogen:    { strong: [/\[autogen\]/i, /user_proxy/i, /groupchat/i],                          weak: ["conversation", "assistant_agent"] },
+    elizaos:    { strong: [/\[elizaos\]/i, /elizaos/i, /character.*provider/i],                   weak: ["evaluator", "action_provider"] },
   };
-  
-  // Detect multi-framework usage in CoT
-  const detectedFrameworks = new Set<string>();
-  
+
+  const detectedFrameworks = new Map<string, "strong" | "weak">();
+  let delegationCount = 0;
+
+  // === SIGNAL PATH 1: CoT framework fingerprinting ===
   if (input.direct_agentic_data?.cot_steps) {
     for (const step of input.direct_agentic_data.cot_steps) {
-      const thought = step.thought.toLowerCase();
-      
-      for (const [framework, markers] of Object.entries(frameworkMarkers)) {
-        for (const marker of markers) {
-          if (thought.includes(marker.toLowerCase())) {
-            detectedFrameworks.add(framework);
-            break;
+      const thought = step.thought;
+      const thoughtLower = thought.toLowerCase();
+
+      // Framework detection
+      for (const [fw, sigs] of Object.entries(frameworkSignatures)) {
+        const alreadyStrong = detectedFrameworks.get(fw) === "strong";
+        if (!alreadyStrong) {
+          if (sigs.strong.some(re => re.test(thought))) {
+            detectedFrameworks.set(fw, "strong");
+          } else if (sigs.weak.some(w => thoughtLower.includes(w))) {
+            if (!detectedFrameworks.has(fw)) detectedFrameworks.set(fw, "weak");
           }
         }
       }
-      
-      // Check for delegation patterns that might indicate collusion
-      if (/delegat.*to.*agent|forward.*to.*agent|pass.*to|handoff/i.test(step.thought)) {
-        evidence.push(`Inter-agent delegation detected: "${step.thought.slice(0, 80)}..."`);
-        snippets.push({
-          source: `CoT step ${step.step}`,
-          content: step.thought.slice(0, 200)
-        });
+
+      // Delegation / handoff patterns — the core collusion signal
+      if (/delegat.*to.*agent|forward.*to.*agent|handoff.*to|pass.*control.*to/i.test(thought)) {
+        delegationCount++;
+        evidence.push(`Inter-agent delegation: "${thought.slice(0, 80)}"`);
+        snippets.push({ source: `CoT step ${step.step}`, content: thought.slice(0, 200) });
+        probability += 18;
+      }
+
+      // Cross-framework instruction patterns
+      if (/\[langgraph\].*\[crewai\]|\[crewai\].*\[langgraph\]/i.test(thought) ||
+          /switching.*framework|cross.*framework|framework.*bridge/i.test(thought)) {
+        evidence.push(`Cross-framework switching in CoT step ${step.step}`);
+        probability += 20;
+      }
+    }
+
+    // Score framework combinations
+    const strongFrameworks = [...detectedFrameworks.entries()].filter(([,v]) => v === "strong").map(([k]) => k);
+    const weakFrameworks  = [...detectedFrameworks.entries()].filter(([,v]) => v === "weak").map(([k]) => k);
+    const totalFrameworks = detectedFrameworks.size;
+
+    if (strongFrameworks.length >= 2) {
+      evidence.push(`Multiple frameworks confirmed (strong signals): ${strongFrameworks.join(", ")}`);
+      probability += 35;
+    } else if (strongFrameworks.length === 1 && weakFrameworks.length >= 1) {
+      evidence.push(`Framework mix: ${strongFrameworks[0]} (confirmed) + ${weakFrameworks.join(", ")} (suspected)`);
+      probability += 22;
+    } else if (totalFrameworks >= 2) {
+      evidence.push(`Multiple framework indicators: ${[...detectedFrameworks.keys()].join(", ")}`);
+      probability += 15;
+    }
+
+    // Multiple delegations amplify the signal
+    if (delegationCount >= 3) {
+      evidence.push(`${delegationCount} delegation events — sustained cross-agent coordination`);
+      probability += 15;
+    }
+  }
+
+  // === SIGNAL PATH 2: Tool call framework fingerprinting ===
+  if (input.direct_agentic_data?.tool_calls) {
+    const toolNames = input.direct_agentic_data.tool_calls.map(t => t.tool.toLowerCase());
+
+    const toolFrameworks = new Set<string>();
+    if (toolNames.some(t => /\bnode\b|\bgraph\b|\bstate\b/.test(t)))   toolFrameworks.add("langgraph");
+    if (toolNames.some(t => /delegate|task|crew/.test(t)))              toolFrameworks.add("crewai");
+    if (toolNames.some(t => /user_proxy|groupchat|autogen/.test(t)))    toolFrameworks.add("autogen");
+    if (toolNames.some(t => /elizaos|character|evaluator/.test(t)))     toolFrameworks.add("elizaos");
+
+    if (toolFrameworks.size >= 2) {
+      evidence.push(`Multi-framework tool usage: ${[...toolFrameworks].join(" + ")}`);
+      probability += 30;
+    } else if (toolFrameworks.size === 1) {
+      const fw = [...toolFrameworks][0];
+      if (!detectedFrameworks.has(fw)) {
+        evidence.push(`Framework-specific tools detected: ${fw}`);
+        probability += 10;
+      }
+    }
+
+    // remove_constraint combined with cross-agent delegation = elevated risk
+    const hasRemoveConstraint = toolNames.some(t => /remove.*constraint|bypass.*limit|disable.*safeguard/.test(t));
+    if (hasRemoveConstraint && toolFrameworks.size >= 1) {
+      evidence.push("Safety constraint removal within multi-framework context");
+      probability += 20;
+    }
+  }
+
+  // === SIGNAL PATH 3: Agent messages ===
+  if (input.direct_agentic_data?.agent_messages) {
+    for (const msg of input.direct_agentic_data.agent_messages) {
+      if (msg.coordination_anomaly) {
+        evidence.push(`Cross-agent coordination anomaly: ${msg.coordination_anomaly}`);
+        probability += 22;
+      }
+      if (/handoff|framework.*switch|delegate.*framework/i.test(msg.content)) {
+        evidence.push("Framework handoff in agent message");
         probability += 15;
       }
     }
   }
-  
-  // Check for framework-switching patterns in tool calls
-  if (input.direct_agentic_data?.tool_calls) {
-    const toolNames = input.direct_agentic_data.tool_calls.map(t => t.tool.toLowerCase());
-    
-    // LangGraph-style tools
-    const langgraphTools = toolNames.filter(t => 
-      t.includes("node") || t.includes("graph") || t.includes("state")
-    );
-    
-    // CrewAI-style tools
-    const crewaiTools = toolNames.filter(t => 
-      t.includes("delegate") || t.includes("task") || t.includes("crew")
-    );
-    
-    // If both frameworks are used, potential collusion
-    if (langgraphTools.length > 0 && crewaiTools.length > 0) {
-      evidence.push(`Multi-framework tool usage: LangGraph (${langgraphTools.length}) + CrewAI (${crewaiTools.length})`);
-      probability += 35;
-    }
-  }
-  
-  // Check agent messages for cross-framework coordination
-  if (input.direct_agentic_data?.agent_messages) {
-    for (const msg of input.direct_agentic_data.agent_messages) {
-      const content = msg.content.toLowerCase();
-      
-      // Look for coordination anomalies
-      if (msg.coordination_anomaly) {
-        evidence.push(`Cross-agent coordination: ${msg.coordination_anomaly}`);
-        probability += 25;
-      }
-      
-      // Check for framework handoff patterns
-      if (/handoff|transfer|delegate|forward.*to/i.test(content)) {
-        evidence.push(`Framework handoff detected in message`);
-        probability += 20;
-      }
-    }
-  }
-  
-  // If multiple frameworks detected in CoT
-  if (detectedFrameworks.size >= 2) {
-    evidence.push(`Multiple frameworks detected: ${Array.from(detectedFrameworks).join(", ")}`);
-    probability += 25;
-  }
-  
+
   return {
     archetype: AgenticArchetype.MULTI_FRAMEWORK_COLLUSION,
     probability: Math.min(100, probability),
-    confidence: evidence.length > 0 ? 0.7 : 0,
+    confidence: evidence.length >= 3 ? 0.82 : evidence.length >= 1 ? 0.7 : 0,
     evidence,
-    severity: probability >= 50 ? "critical" : probability >= 30 ? "high" : "medium",
-    snippets
+    severity: probability >= 55 ? "critical" : probability >= 35 ? "high" : "medium",
+    snippets,
   };
 }
 
