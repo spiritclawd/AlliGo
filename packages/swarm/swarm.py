@@ -214,14 +214,18 @@ def check_eas_wallet_balance(env_vars: dict):
             "jsonrpc": "2.0", "method": "eth_getBalance",
             "params": [EAS_WALLET, "latest"], "id": 1
         }).encode()
-        req = _ur.Request(
-            "https://mainnet.base.org",
-            data=payload,
-            headers={"Content-Type": "application/json"},
-            method="POST"
-        )
-        with _ur.urlopen(req, timeout=10) as r:
-            result = json.loads(r.read())
+        result = None
+        for rpc_url in ["https://base.llamarpc.com", "https://base-rpc.publicnode.com", "https://mainnet.base.org"]:
+            try:
+                req = _ur.Request(rpc_url, data=payload, headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"}, method="POST")
+                with _ur.urlopen(req, timeout=8) as r:
+                    result = json.loads(r.read())
+                if "result" in result:
+                    break
+            except Exception:
+                continue
+        if not result or "result" not in result:
+            raise Exception("All Base RPCs failed")
         wei = int(result["result"], 16)
         eth = wei / 1e18
         log(f"💰 EAS wallet balance: {eth:.6f} ETH", "watchdog")

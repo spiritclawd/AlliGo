@@ -67,18 +67,19 @@ Key variable names (values in `.env`):
 ```
 ALLIGO_ADMIN_KEY          # Railway admin key for AlliGo prod
 ALLIGO_API                # https://alligo-production.up.railway.app
-OPENROUTER_API_KEY        # PRIMARY LLM (OpenRouter)
+OPENROUTER_API_KEY        # PRIMARY LLM (OpenRouter) — ROTATED 2026-03-17 (old key was compromised)
 GROQ_API_KEY              # FALLBACK LLM (Groq)
 LLM_API / LLM_KEY         # LOCAL LLM (llama-cpp-python on port 8080, key: zaia)
 GITHUB_PAT                # GitHub Personal Access Token (spiritclawd)
 TELEGRAM_BOT_TOKEN        # @alligoBot token
 AGENTMAIL_API_KEY         # spirit@agentmail.to
-EAS_PRIVATE_KEY           # TaskMarket wallet private key (Base)
-EAS_SCHEMA_UID            # 0x24a11bf9f247fa2e0129c6b1036c7ea0b0e186aea6f36ee27499aac749640210
+EAS_PRIVATE_KEY           # EAS attester wallet private key (Base Mainnet)
+EAS_SCHEMA_UID            # 0xb7c0c403941bfa822940a27602e8b9350904b5a13e0ed291f2ccc3d92dc974ba (updated 2026-03-17)
 EAS_ATTESTER_ADDRESS      # 0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d (plain EOA, created 2026-03-17)
-EAS_MODE                  # offchain (flip to onchain once wallet has ETH on Base)
-# NOTE: Old TaskMarket address 0x62400977... is an EIP-7702 smart account — ETH sent to it
-# is forwarded by the contract's receive() function. Use the new plain EOA above instead.
+EAS_MODE                  # onchain (set but wallet is 0 ETH — attestations need top-up)
+# ⚠️ EAS WALLET IS EMPTY — send ETH to 0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d on Base Mainnet
+TASKMARKET_WALLET         # 0xD34F1CB3C03884620f096401CFfb3F8f4C5fe304 (Zaia USDC wallet, ~$46.23 USDC)
+NPM_TOKEN                 # npm automation token (in .env only, never commit the value)
 FORENSICS_MODEL           # meta-llama/llama-3.3-70b-instruct
 FORENSICS_MODEL_CHEAP     # meta-llama/llama-3.1-8b-instruct
 ```
@@ -114,7 +115,7 @@ FORENSICS_MODEL_CHEAP     # meta-llama/llama-3.1-8b-instruct
 
 ---
 
-## 6. THE SWARM — 10 AGENTS
+## 6. THE SWARM — 12 AGENTS
 
 All agents live in `/home/computer/zaia-swarm/agents/`. They run on schedule via `swarm.py`.
 
@@ -130,8 +131,17 @@ All agents live in `/home/computer/zaia-swarm/agents/`. They run on schedule via
 | `agentmail_router.py` | 30min | Polls spirit@agentmail.to, routes incident reports, auto-replies |
 | `virtuals_monitor.py` | 60min | Monitors Virtuals Protocol API, risk-scores new agents, submits HIGH risk claims |
 | `telegram_ingest.py` | 30min | Polls @alligo_alerts + @alligoBot, parses user drain reports → claims |
+| `daydreams_ingest.py` | 30min | Polls TaskMarket for new submissions, ingests traces to AlliGo DB |
+| `daydreams_reviewer.py` | 15min | Reviews submissions: forensics gate → accept/reject → USDC payout |
 
-**Swarm also has a built-in watchdog** in `swarm.py` — fires every 5 min, auto-fixes calibration drift.
+**Swarm also has a built-in watchdog** in `swarm.py` — fires every 5 min, auto-fixes calibration drift, checks EAS wallet balance.
+
+### TaskMarket Bounty State
+- **Zaia wallet**: `0xD34F1CB3C03884620f096401CFfb3F8f4C5fe304` | `alligo@daydreams.systems` | agentId 33058
+- **Active task**: `0xab58bacae3f206f145a9757ff2600e27a1ff8bb67d7d9bdc3204fd6cd4806722` (expires 2026-03-20T15:49:12Z)
+- **USDC balance**: ~$46.23 | **Paid so far**: $2.00 (1 submission accepted)
+- **Submission format**: agents submit proof-reports (markdown), NOT raw JSON
+- **Data files**: `/home/computer/zaia-swarm/data/` — `payout_ledger.json`, `seen_submissions.json`, `alligo_task_ids.json`, `consec_rejections.json`
 
 ---
 
@@ -209,7 +219,7 @@ Architecture decisions / complex debugging ONLY:
 ```bash
 python3 -c "
 import urllib.request, json
-key = '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'
+key = open('/home/computer/zaia-swarm/.env').read().split('OPENROUTER_API_KEY=')[1].split('\n')[0].strip()  # read from .env
 payload = json.dumps({'model':'meta-llama/llama-3.1-8b-instruct','messages':[{'role':'user','content':'Say OK'}],'max_tokens':5}).encode()
 req = urllib.request.Request('https://openrouter.ai/api/v1/chat/completions', data=payload,
   headers={'Content-Type':'application/json','Authorization':f'Bearer {key}','HTTP-Referer':'https://alligo-production.up.railway.app','X-Title':'AlliGo'})
@@ -234,18 +244,18 @@ Full strategy: `/home/computer/.memory/capabilities/alligo-acquisition-strategy.
 ## 12. PENDING WORK (as of 2026-03-17)
 
 ### Carlos must action:
-- [ ] npm token → publish `@alligo/plugin-elizaos` to npm (`npm token create` at npmjs.com → Automation token)
-- [ ] ETH on Base wallet `0x62400977...` → enables onchain EAS (funded but not yet confirmed)
+- [x] npm token → `@alligo/plugin-elizaos@0.1.0` published to npm ✅
+- [ ] **⚠️ ETH on Base** → `0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d` needs ≥0.005 ETH for onchain EAS attestations (currently 0 ETH)
 
 ### Zaia executes when unblocked:
-- [ ] **EAS onchain flip**: Run `register-schema.ts` once wallet funded → set `EAS_MODE=onchain` in Railway
-- [ ] **npm publish**: `cd /home/computer/alligo-elizaos-plugin && npm publish --access public` (needs npm token)
+- [ ] **EAS onchain flip**: Fund wallet first → set `EAS_MODE=onchain` in Railway env vars (currently set to onchain in .env but wallet is empty)
 
 ### Next build priorities:
-1. **Improve virtuals_monitor risk scoring** — add token contract analysis (bytecode similarity to known rugs)
-2. **Telegram bot webhook** — replace polling with webhook for real-time drain reports
-3. **AlliGo public dashboard** — simple web UI showing live claim feed + calibration metrics
-4. **Agent score API v2** — richer response with forensics archetype breakdown
+1. **Strengthen weak detectors** — `Jailbreak_Vulnerability` (3 examples only), `Memory_Poisoning`, `Tool_Looping_Denial`, `Counterparty_Collusion` — add more training data from bounty submissions
+2. **Post second bounty** targeting specifically jailbreak/adversarial traces (after 10+ submissions or 72h expire)
+3. **Improve virtuals_monitor risk scoring** — add token contract analysis (bytecode similarity to known rugs)
+4. **Telegram bot webhook** — replace polling with webhook for real-time drain reports
+5. **AlliGo public dashboard** — simple web UI showing live claim feed + calibration metrics
 
 ---
 
@@ -285,8 +295,9 @@ cat /home/computer/.memory/journal/$(date +%Y-%m-%d).md 2>/dev/null || ls /home/
 
 ---
 
-*Last updated: 2026-03-17 by Zaia (session 9)*
+*Last updated: 2026-03-17 by Zaia (session 12)*
 *Commit this file to spiritclawd/AlliGo master after any significant changes.*
 
 ---
 *Updated 2026-03-17 session 11: @alligo/plugin-elizaos@0.1.0 published to npm. NPM_TOKEN in swarm .env.*
+*Updated 2026-03-17 session 12: OpenRouter key rotated (old key compromised). TaskMarket live. First bounty posted + first payment made ($2 USDC to agent 24790). 12 swarm agents (added daydreams_ingest + daydreams_reviewer). EAS wallet at 0 ETH — NEEDS TOP-UP on Base Mainnet (`0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d`). EAS RPC fix: add User-Agent header to urllib requests (RPCs block Python default UA). Calibration persisted to Redis (TTL 7d). All credentials updated in zaia-swarm/.env.*
