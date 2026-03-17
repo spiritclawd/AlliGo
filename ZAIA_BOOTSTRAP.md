@@ -287,3 +287,6 @@ cat /home/computer/.memory/journal/$(date +%Y-%m-%d).md 2>/dev/null || ls /home/
 
 *Last updated: 2026-03-17 by Zaia (session 9)*
 *Commit this file to spiritclawd/AlliGo master after any significant changes.*
+
+---
+*Updated 2026-03-17 session 11: @alligo/plugin-elizaos@0.1.0 published to npm. NPM_TOKEN in swarm .env.*
