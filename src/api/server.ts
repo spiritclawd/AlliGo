@@ -1250,6 +1250,131 @@ async function handleRequest(req: Request): Promise<Response> {
     }
   }
 
+  // ── Daydreams / Bounty Submission endpoint ────────────────────────────────
+  // External agents (Daydreams, ElizaOS, etc.) POST agentic traces here.
+  // Zaia's daydreams_ingest.py also reads from this queue via GET.
+  // POST: submit a trace for forensics + bounty reward
+  // GET: admin poll of pending submissions (used by daydreams_ingest.py)
+  if (path === "/api/bounty/submissions" && method === "POST") {
+    // Accept with API key OR x402 micropayment
+    const authCheck = requireAuth(req, "read");
+    if (!authCheck.valid) {
+      const x402Check = await x402Middleware(req, "/api/bounty/submissions", "single_report");
+      if (!x402Check.allowed) return x402Check.response!;
+    }
+    try {
+      const body = await req.json();
+      const agentId = body.agentId || body.agent_id;
+      if (!agentId) return json({ success: false, error: "agentId required" }, 400);
+
+      // Store in Redis queue (TTL: 24h) for daydreams_ingest.py to pick up
+      const submissionId = `bounty-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+      const submission = {
+        id: submissionId,
+        agentId,
+        agentName: body.agentName || agentId,
+        chain_of_thought: body.chain_of_thought || body.cot,
+        tool_calls: body.tool_calls || body.toolCalls,
+        goal_history: body.goal_history || body.goalHistory,
+        memory_ops: body.memory_ops,
+        injection_attempts: body.injection_attempts,
+        agent_messages: body.agent_messages,
+        traces: body.traces,
+        submitted_at: new Date().toISOString(),
+        submitter: body.submitter || "external",
+        status: "pending",
+        bounty_tier: body.bounty_tier || null,
+      };
+
+      // Also immediately pipe through forensics engine
+      const { analyzeAgenticInternals } = await import("../forensics/agentic-internals");
+      const report = await analyzeAgenticInternals({
+        agent_handle: agentId,
+        direct_agentic_data: {
+          cot_trace: submission.chain_of_thought || submission.traces || "",
+          tool_calls: submission.tool_calls
+            ? submission.tool_calls.map((c: any) => ({
+                tool: c.tool || c.name || "unknown",
+                params: c.params || c.args || c.arguments || {},
+                success: c.success !== undefined ? c.success : true,
+                retry_count: c.retry_count || 0,
+                result: c.result || null,
+                timestamp: c.timestamp || Date.now(),
+              }))
+            : undefined,
+          goal_history: submission.goal_history
+            ? submission.goal_history.map((g: string, i: number) => ({ step: i, goal: g, timestamp: Date.now() }))
+            : undefined,
+          memory_snapshot: submission.memory_ops,
+          injection_attempts: submission.injection_attempts,
+          agent_messages: submission.agent_messages,
+        },
+      });
+
+      const archetypes = report.behavioral_archetypes || [];
+      const topMatch = archetypes[0] || null;
+      const confidence = topMatch?.confidence ?? 0;
+      const archetype = topMatch?.archetype ?? "CLEAN";
+      const severity = confidence >= 0.8 ? "HIGH" : confidence >= 0.5 ? "MEDIUM" : "LOW";
+
+      // Determine bounty tier based on confidence + archetype
+      const bountyTier = confidence >= 0.9 ? "gold" : confidence >= 0.75 ? "silver" : confidence >= 0.5 ? "bronze" : null;
+      const bountyValue = bountyTier === "gold" ? 50 : bountyTier === "silver" ? 25 : bountyTier === "bronze" ? 2 : 0;
+
+      const result: Record<string, any> = {
+        success: true,
+        submissionId,
+        forensics: { archetype, confidence, severity, grade: report.grade, archetypeMatches: archetypes },
+        bounty: { tier: bountyTier, value: bountyValue, currency: "USD", payment: "x402" },
+        action: "queued",
+      };
+
+      // Auto-store as claim if high confidence
+      if (confidence >= 0.75 && archetype !== "CLEAN") {
+        try {
+          const { insertClaim } = await import("./db");
+          const claimId = `bounty-${agentId}-${Date.now()}`;
+          insertClaim({
+            id: claimId, agentId, agentName: submission.agentName,
+            claimType: "security" as any, category: "security" as any,
+            severityScore: Math.round(confidence * 100), severityLevel: severity.toLowerCase() as any,
+            amountLost: 0,
+            title: `${archetype} detected via bounty submission`,
+            description: `[Bounty submission] ${archetype} ${(confidence * 100).toFixed(0)}% confidence. Submitter: ${submission.submitter}`,
+            evidence: JSON.stringify({ submissionId, tool_calls: submission.tool_calls, cot: submission.chain_of_thought }),
+            timestamp: new Date().toISOString(), reportedAt: new Date().toISOString(),
+            source: "bounty-submission" as any, verified: confidence >= 0.9,
+            chain: body.chain || "unknown",
+            tags: ["bounty-submitted", "daydreams", archetype.toLowerCase()],
+          } as any);
+          result.action = "stored";
+          result.claimId = claimId;
+          result.forensics.autoStored = true;
+        } catch (_) {}
+      }
+
+      return json(result);
+    } catch (e: any) {
+      return json({ success: false, error: e.message }, 500);
+    }
+  }
+
+  if (path === "/api/bounty/submissions" && method === "GET") {
+    const authCheck = requireAuth(req, "admin");
+    if (!authCheck.valid) return authCheck.response!;
+    // Return recent claims tagged as bounty-submitted for the ingest agent to process
+    try {
+      const { getClaims } = await import("./db");
+      const claims = getClaims({ limit: 50 });
+      const bountySubmissions = claims
+        .filter((c: any) => c.source === "bounty-submission" && c.tags?.includes?.("bounty-submitted"))
+        .map((c: any) => ({ id: c.id, agentId: c.agentId, status: "completed", archetype: c.title }));
+      return json({ success: true, submissions: bountySubmissions, count: bountySubmissions.length });
+    } catch (e: any) {
+      return json({ success: true, submissions: [], count: 0 });
+    }
+  }
+
   // Agent Report endpoint - Generate performance report for any agent ID
   // Supports 8004 protocol and other agent identification systems
   // Requires x402 payment or valid API key
