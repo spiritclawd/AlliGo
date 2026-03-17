@@ -1,0 +1,17 @@
+{
+  "active": [
+    "0xab58bacae3f206f145a9757ff2600e27a1ff8bb67d7d9bdc3204fd6cd4806722"
+  ],
+  "legacy": [
+    {
+      "id": "0xab58bacae3f206f145a9757ff2600e27a1ff8bb67d7d9bdc3204fd6cd4806722",
+      "status": "accepted",
+      "wallet": "0xD34F1CB3C03884620f096401CFfb3F8f4C5fe304",
+      "note": "Posted from old wallet (wiped). Cannot process submissions from new wallet. Expires 2026-03-20.",
+      "remaining_usdc": 44.23
+    }
+  ],
+  "new_wallet": "0xA5aCaA6779377217Ac8fC0A988Aee62C956eEe13",
+  "new_agentId": "33150",
+  "note": "Fund new wallet to post new bounties. Old USDC locked in old escrow."
+}

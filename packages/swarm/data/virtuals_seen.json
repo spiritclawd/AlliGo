@@ -1,0 +1,370 @@
+{
+  "52096": {
+    "name": "BUKALAPAK.inc by Virtuals",
+    "symbol": "BUKA",
+    "risk_level": "CLEAN",
+    "risk_score": 0,
+    "first_seen": "2026-03-17T18:13:46.462445",
+    "status": "UNDERGRAD"
+  },
+  "52095": {
+    "name": "Openclaw-animocaminds by Virtuals",
+    "symbol": "OPENCLAW",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:46.662785",
+    "status": "UNDERGRAD"
+  },
+  "52094": {
+    "name": "BoinkersIO by Virtuals",
+    "symbol": "BI0",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:46.863105",
+    "status": "UNDERGRAD"
+  },
+  "52085": {
+    "name": "AlphaGrid by Virtuals",
+    "symbol": "ALPHA",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:47.063442",
+    "status": "UNDERGRAD"
+  },
+  "52084": {
+    "name": "\uc608\ub9b0 \ubc14\ub78c by Virtuals",
+    "symbol": "YERINBARAM",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:47.263827",
+    "status": "UNDERGRAD"
+  },
+  "52083": {
+    "name": "\ud558\uc724 \ube5b by Virtuals",
+    "symbol": "HAYOON",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:47.464132",
+    "status": "UNDERGRAD"
+  },
+  "52082": {
+    "name": "\uc218\uc544 \uc740 by Virtuals",
+    "symbol": "SUAEUN",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:47.664480",
+    "status": "UNDERGRAD"
+  },
+  "52081": {
+    "name": "\ubbfc\uc11c \ud558 by Virtuals",
+    "symbol": "MINSEOHA",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:47.864801",
+    "status": "UNDERGRAD"
+  },
+  "52080": {
+    "name": "\uc11c\uc5f0 \uaf43 by Virtuals",
+    "symbol": "SEOYEONKOT",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:48.065094",
+    "status": "UNDERGRAD"
+  },
+  "52079": {
+    "name": "\ub2e4\uc5f0 \ud76c by Virtuals",
+    "symbol": "DAYEONHUI",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:48.265452",
+    "status": "UNDERGRAD"
+  },
+  "52078": {
+    "name": "\uc740\uc11c \ub2ec by Virtuals",
+    "symbol": "EUNSEODAL",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:48.465774",
+    "status": "UNDERGRAD"
+  },
+  "52077": {
+    "name": "\ucc44\uc6d0 \uaf43 by Virtuals",
+    "symbol": "CHAEWOON",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:48.666073",
+    "status": "UNDERGRAD"
+  },
+  "52076": {
+    "name": "EaiArt by Virtuals",
+    "symbol": "EAR",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:48.866371",
+    "status": "UNDERGRAD"
+  },
+  "52075": {
+    "name": "\uc544\ub9b0 \ubcc4 by Virtuals",
+    "symbol": "ARINBYEOL",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:49.066686",
+    "status": "UNDERGRAD"
+  },
+  "52074": {
+    "name": "EaiCode by Virtuals",
+    "symbol": "EAC",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:49.266992",
+    "status": "UNDERGRAD"
+  },
+  "52073": {
+    "name": "\uc18c\ub77c \uafc8 by Virtuals",
+    "symbol": "SORAKUM",
+    "risk_level": "CLEAN",
+    "risk_score": 0,
+    "first_seen": "2026-03-17T18:13:49.467241",
+    "status": "UNDERGRAD"
+  },
+  "52072": {
+    "name": "\uc720\ub098 \ubcc4 by Virtuals",
+    "symbol": "YUNABYEOL",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:49.667584",
+    "status": "UNDERGRAD"
+  },
+  "52071": {
+    "name": "Jiwo Bit by Virtuals",
+    "symbol": "JIWO",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:49.867916",
+    "status": "UNDERGRAD"
+  },
+  "52070": {
+    "name": "Hari Haneul by Virtuals",
+    "symbol": "HANEUL",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:50.068205",
+    "status": "UNDERGRAD"
+  },
+  "52068": {
+    "name": "\ubbf8\uc544 \ub9b0 by Virtuals",
+    "symbol": "MIARIN",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:50.268528",
+    "status": "UNDERGRAD"
+  },
+  "52067": {
+    "name": "\uc548\ub155 \ud558\ub098 by Virtuals",
+    "symbol": "ANYEOONG",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:50.468832",
+    "status": "UNDERGRAD"
+  },
+  "52066": {
+    "name": "\uc138\ub77c \uc724 by Virtuals",
+    "symbol": "SERAYOON",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:50.669141",
+    "status": "UNDERGRAD"
+  },
+  "52065": {
+    "name": "\ub8e8\ub098 \uc9c0 by Virtuals",
+    "symbol": "LUNAJI",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:50.869469",
+    "status": "UNDERGRAD"
+  },
+  "52064": {
+    "name": "OpenClaw Agent by Virtuals",
+    "symbol": "OCAI",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:51.069809",
+    "status": "UNDERGRAD"
+  },
+  "52062": {
+    "name": "Hanabi by Virtuals",
+    "symbol": "HANABIHANA",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:51.270126",
+    "status": "UNDERGRAD"
+  },
+  "52061": {
+    "name": "Hana VC by Virtuals",
+    "symbol": "HANA",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:51.470432",
+    "status": "UNDERGRAD"
+  },
+  "52060": {
+    "name": "Hana Agent by Virtuals",
+    "symbol": "HANAVC",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:51.670754",
+    "status": "UNDERGRAD"
+  },
+  "52058": {
+    "name": "Gov 001 by Virtuals",
+    "symbol": "GOV01",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:51.871052",
+    "status": "UNDERGRAD"
+  },
+  "52057": {
+    "name": "Grvt Exchange ofc by Virtuals",
+    "symbol": "GRVTE",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:52.071358",
+    "status": "UNDERGRAD"
+  },
+  "52055": {
+    "name": "Herman AI by Virtuals",
+    "symbol": "HERMANAI",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:52.271620",
+    "status": "UNDERGRAD"
+  },
+  "52054": {
+    "name": "KidZilla by Virtuals",
+    "symbol": "ZILLA",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:52.471942",
+    "status": "UNDERGRAD"
+  },
+  "52053": {
+    "name": "PentestAgent by Virtuals",
+    "symbol": "PENTEST",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:52.672255",
+    "status": "UNDERGRAD"
+  },
+  "52052": {
+    "name": "AIxBET by Virtuals",
+    "symbol": "AXB",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:52.872567",
+    "status": "UNDERGRAD"
+  },
+  "52051": {
+    "name": "ClawdFred by Virtuals",
+    "symbol": "CLWDF",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:53.072888",
+    "status": "UNDERGRAD"
+  },
+  "52050": {
+    "name": "ALOY ALOY by Virtuals",
+    "symbol": "ALOY",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:53.275081",
+    "status": "UNDERGRAD"
+  },
+  "52048": {
+    "name": "Tweezy by Virtuals",
+    "symbol": "TWEEZY",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:53.475481",
+    "status": "UNDERGRAD"
+  },
+  "52047": {
+    "name": "Agentescrow by Virtuals",
+    "symbol": "AESC",
+    "risk_level": "LOW",
+    "risk_score": 15,
+    "first_seen": "2026-03-17T18:13:53.675790",
+    "status": "UNDERGRAD"
+  },
+  "52046": {
+    "name": "Authentic by Virtuals",
+    "symbol": "AUTH",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:53.876067",
+    "status": "UNDERGRAD"
+  },
+  "52043": {
+    "name": "MRXLOLCAT AGENT by Virtuals",
+    "symbol": "LOLCAT",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:54.076411",
+    "status": "UNDERGRAD"
+  },
+  "52042": {
+    "name": "Flush AI by Virtuals",
+    "symbol": "FLAI",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:54.276708",
+    "status": "UNDERGRAD"
+  },
+  "52041": {
+    "name": "Simply by Virtuals",
+    "symbol": "SIMPLY",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:54.477060",
+    "status": "UNDERGRAD"
+  },
+  "52040": {
+    "name": "404 Not Found by Virtuals",
+    "symbol": "404",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:54.677418",
+    "status": "UNDERGRAD"
+  },
+  "52039": {
+    "name": "Vnetwork by Virtuals",
+    "symbol": "VNET",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:54.877739",
+    "status": "UNDERGRAD"
+  },
+  "52037": {
+    "name": "ERC8183 Meta by Virtuals",
+    "symbol": "META",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:55.078052",
+    "status": "UNDERGRAD"
+  },
+  "52036": {
+    "name": "0xmasbro by Virtuals",
+    "symbol": "BRO",
+    "risk_level": "LOW",
+    "risk_score": 20,
+    "first_seen": "2026-03-17T18:13:55.278371",
+    "status": "UNDERGRAD"
+  },
+  "52035": {
+    "name": "ERC8183 ZERO by Virtuals",
+    "symbol": "ZERO",
+    "risk_level": "CLEAN",
+    "risk_score": 0,
+    "first_seen": "2026-03-17T18:13:55.478654",
+    "status": "UNDERGRAD"
+  }
+}

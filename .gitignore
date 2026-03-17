@@ -8,8 +8,9 @@ dist/
 build/
 *.tsbuildinfo
 
-# Database files (keep schema, ignore data)
-data/
+# Database files (keep schema, ignore runtime data)
+/data/
+src/data/
 *.db
 *.db-shm
 *.db-wal

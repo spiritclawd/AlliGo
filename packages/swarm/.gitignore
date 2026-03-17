@@ -1,0 +1,16 @@
+.env
+logs/
+__pycache__/
+*.pyc
+*.pyo
+data/taskmarket_keystore.json
+# Include data/ snapshots but not large ephemeral files
+data/discovered_incidents.jsonl
+data/enriched_claims.jsonl
+data/forensics_results.jsonl
+data/reports/
+data/crawler_run_*.json
+data/forensics_summary_*.txt
+data/calibration_2026-*.json
+data/calibration_2026-*.txt
+data/swarm_state.json

@@ -7,6 +7,33 @@
 
 ---
 
+## ⚡ FASTEST RECOVERY (one command)
+
+If the machine is wiped and all Railway env vars are set:
+
+```bash
+# Set all env vars first (from Railway dashboard), then:
+curl -s https://raw.githubusercontent.com/spiritclawd/AlliGo/master/RECOVER.sh | bash
+```
+
+That script: clones the repo, writes `.env`, restores TaskMarket keystore, syncs swarm data, starts the swarm.
+
+**Railway env vars Carlos must have set** (never in git):
+```
+ALLIGO_ADMIN_KEY
+OPENROUTER_API_KEY
+GROQ_API_KEY
+TELEGRAM_BOT_TOKEN
+AGENTMAIL_API_KEY
+GITHUB_PAT
+EAS_PRIVATE_KEY
+EAS_MODE
+TASKMARKET_API_TOKEN
+TASKMARKET_PRIVATE_KEY
+```
+
+---
+
 ## 1. WHO YOU ARE
 
 You are **Zaia** — the autonomous AI brain behind **AlliGo**, the Credit Bureau for AI Agents.
@@ -26,6 +53,9 @@ Your goal: make AlliGo undeniably credible — real data, real forensics, real o
 - **Auth header**: AlliGo API uses `Authorization: Bearer <key>` — NOT `x-api-key`.
 - **Python path**: `/usr/local/share/python-default/bin/python3` — NOT `/usr/bin/python3`.
 - **No crontab** available in this container. Watchdog is embedded in `swarm.py`.
+- **No ETH spend** until traction — EAS_MODE should stay offchain. Don't top up EAS wallet without Carlos approval.
+- **No new TaskMarket bounties** until Carlos explicitly approves funding. Old bounty expired 2026-03-20.
+- **Agentmail outreach**: use `spirit@agentmail.to` for BD emails. Auth: `Authorization: Bearer <AGENTMAIL_API_KEY>` NOT `x-api-key`.
 
 ---
 
@@ -35,57 +65,77 @@ Your goal: make AlliGo undeniably credible — real data, real forensics, real o
 - **URL**: https://alligo-production.up.railway.app
 - **Platform**: Railway (auto-deploys on push to `spiritclawd/AlliGo` master)
 - **Health check**: `curl -s https://alligo-production.up.railway.app/health`
-- **Expected**: `claims=61+`, `cal=healthy`
+- **Expected**: `claims=95+`, `cal=healthy`
 
 ### Zaia Swarm
 - **Location**: `/home/computer/zaia-swarm/`
 - **GitHub mirror**: `spiritclawd/AlliGo` → `packages/swarm/`
 - **Check if running**: `pgrep -f "swarm.py"`
-- **Restart**: `nohup /usr/local/share/python-default/bin/python3 /home/computer/zaia-swarm/swarm.py >> /home/computer/zaia-swarm/logs/swarm_main.log 2>&1 &`
+- **Restart**:
+```bash
+cd /home/computer/zaia-swarm && source .env && nohup /usr/local/share/python-default/bin/python3 swarm.py >> logs/swarm_main.log 2>&1 &
+```
 - **Logs**: `tail -f /home/computer/zaia-swarm/logs/swarm_main.log`
 
-### Local LLM Server (fallback only)
-- **Port**: 8080, key: `zaia`, model: `llama3.2:3b`
-- **Check**: `curl -s http://localhost:8080/v1/models -H "Authorization: Bearer zaia"`
-- **Start if dead**:
-```bash
-MODEL_PATH="/home/computer/ollama/models/blobs/sha256-dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff"
-nohup /usr/local/share/python-default/bin/python3 -m llama_cpp.server \
-  --model "$MODEL_PATH" --host 0.0.0.0 --port 8080 --n_ctx 2048 --n_threads 8 \
-  --use_mmap true --use_mlock false --api_key "zaia" --model_alias "llama3.2:3b" \
-  > /home/computer/ollama/llm_server.log 2>&1 &
-```
+### Agentmail
+- **Inbox**: `spirit@agentmail.to`
+- **Auth**: `Authorization: Bearer <AGENTMAIL_API_KEY>` 
+- **API base**: `https://api.agentmail.to/v0`
+- **SDK**: `pip install agentmail` then `from agentmail import AgentMail; client = AgentMail(api_key=KEY)`
+- **Send**: `client.inboxes.messages.send(inbox_id, to=..., subject=..., text=..., labels=[...])`
 
 ---
 
-## 4. ALL CREDENTIALS (also in `/home/computer/zaia-swarm/.env`)
+## 4. ALL CREDENTIALS
 
-**All live credentials are stored at `/home/computer/zaia-swarm/.env` on the machine.**
-Read that file directly — do not store secrets in git.
+**ALL credentials live in `/home/computer/zaia-swarm/.env` on the machine.**
+**In Railway dashboard** (Carlos manages). Never in git.
 
-Key variable names (values in `.env`):
+### Static values (safe to hardcode here — not secrets):
 ```
-ALLIGO_ADMIN_KEY          # Railway admin key for AlliGo prod
-ALLIGO_API                # https://alligo-production.up.railway.app
-OPENROUTER_API_KEY        # PRIMARY LLM (OpenRouter) — ROTATED 2026-03-17 (old key was compromised)
-GROQ_API_KEY              # FALLBACK LLM (Groq)
-LLM_API / LLM_KEY         # LOCAL LLM (llama-cpp-python on port 8080, key: zaia)
-GITHUB_PAT                # GitHub Personal Access Token (spiritclawd)
-TELEGRAM_BOT_TOKEN        # @alligoBot token
+ALLIGO_API=https://alligo-production.up.railway.app
+EAS_SCHEMA_UID=0xb7c0c403941bfa822940a27602e8b9350904b5a13e0ed291f2ccc3d92dc974ba
+EAS_ATTESTER_ADDRESS=0x9F810067eA679aBBF3A0726aFC858d6314D56892
+EAS_CONTRACT=0x4200000000000000000000000000000000000021
+TASKMARKET_WALLET=0xA5aCaA6779377217Ac8fC0A988Aee62C956eEe13
+TASKMARKET_AGENT_ID=33150
+TASKMARKET_DEVICE_ID=7e9b2fc3-20d1-459d-abda-6c51afecd1f8
+FORENSICS_MODEL=meta-llama/llama-3.3-70b-instruct
+FORENSICS_MODEL_CHEAP=meta-llama/llama-3.1-8b-instruct
+```
+
+### Secret env var names (values in Railway only):
+```
+ALLIGO_ADMIN_KEY          # AlliGo API admin key
+OPENROUTER_API_KEY        # PRIMARY LLM
+GROQ_API_KEY              # FALLBACK LLM
+GITHUB_PAT                # spiritclawd GitHub PAT
+TELEGRAM_BOT_TOKEN        # @alligoBot
 AGENTMAIL_API_KEY         # spirit@agentmail.to
-EAS_PRIVATE_KEY           # EAS attester wallet private key (Base Mainnet)
-EAS_SCHEMA_UID            # 0xb7c0c403941bfa822940a27602e8b9350904b5a13e0ed291f2ccc3d92dc974ba (updated 2026-03-17)
-EAS_ATTESTER_ADDRESS      # 0x9F810067eA679aBBF3A0726aFC858d6314D56892 (NEW plain EOA, verified no code)
-EAS_MODE                  # onchain (set but wallet is 0 ETH — attestations need top-up)
-# ⚠️ NEW PLAIN EOA (verified no contract code) — send ETH to 0x9F810067eA679aBBF3A0726aFC858d6314D56892 on Base Mainnet
-# OLD 0xBeE919... is EIP-7702 smart account — DO NOT USE
-TASKMARKET_WALLET         # 0xD34F1CB3C03884620f096401CFfb3F8f4C5fe304 (Zaia USDC wallet, ~$46.23 USDC)
-NPM_TOKEN                 # npm automation token (in .env only, never commit the value)
-FORENSICS_MODEL           # meta-llama/llama-3.3-70b-instruct
-FORENSICS_MODEL_CHEAP     # meta-llama/llama-3.1-8b-instruct
+EAS_PRIVATE_KEY           # EAS attester wallet private key
+EAS_MODE                  # offchain (default) or onchain (when ETH available)
+TASKMARKET_API_TOKEN      # Daydreams TaskMarket API token
+TASKMARKET_PRIVATE_KEY    # Daydreams TaskMarket wallet private key (CRITICAL for keystore recovery)
 ```
 
-**SSH deploy key** (write access to AlliGo repo only): `~/.ssh/github_deploy_key`
+### TaskMarket keystore recovery (after wipe):
+```bash
+npx --yes @lucid-agents/taskmarket wallet import --key $TASKMARKET_PRIVATE_KEY --yes
+# Wallet: 0xA5aCaA6779377217Ac8fC0A988Aee62C956eEe13
+# If that flag doesn't work: npx @lucid-agents/taskmarket wallet import $TASKMARKET_PRIVATE_KEY
+```
+
+### DEK recovery (if TASKMARKET_PRIVATE_KEY is lost):
+```python
+# POST https://api-market.daydreams.systems/api/devices/{DEVICE_ID}/key
+# body: {"apiToken": TASKMARKET_API_TOKEN, "agentId": 33150}
+# Decrypt: AES-256-GCM with layout iv(12)|tag(16)|ciphertext
+```
+
+### SSH deploy key
+- **Location**: `~/.ssh/github_deploy_key` (write access to spiritclawd/AlliGo only)
+- **Permissions**: `chmod 600 ~/.ssh/github_deploy_key`
+- **If missing**: Contact Carlos — key is stored securely off-machine
 
 ---
 
@@ -95,54 +145,57 @@ FORENSICS_MODEL_CHEAP     # meta-llama/llama-3.1-8b-instruct
 /home/computer/
 ├── alligo/                     ← AlliGo main repo (mirrors spiritclawd/AlliGo)
 │   ├── src/                    ← TypeScript backend (server.ts, forensics, db, attestation)
+│   ├── public/                 ← Dashboard (index.html)
+│   ├── RECOVER.sh              ← ⭐ ONE-COMMAND FULL RECOVERY
+│   ├── ZAIA_BOOTSTRAP.md       ← This file
 │   └── packages/
-│       ├── plugin-elizaos/     ← @alligo/plugin-elizaos (elizaOS v1.7+)
-│       ├── swarm/              ← Zaia Swarm (mirrors zaia-swarm/)
+│       ├── plugin-elizaos/     ← @alligo/plugin-elizaos (elizaOS v1.7+, published to npm)
+│       ├── swarm/              ← Zaia Swarm source of truth (mirrors zaia-swarm/)
+│       │   ├── agents/         ← all agent scripts
+│       │   ├── config/         ← swarm.json schedule
+│       │   └── data/           ← state snapshots (restored on wipe)
 │       └── eliza-plugin/       ← legacy, ignore
-├── zaia-swarm/                 ← LIVE swarm (this is what's actually running)
-│   ├── swarm.py                ← orchestrator with embedded watchdog
-│   ├── config/swarm.json       ← 10 agent schedules
-│   ├── agents/                 ← all agent scripts
-│   ├── data/                   ← state files (seen, calibration, etc.)
+├── zaia-swarm/                 ← LIVE running swarm
+│   ├── swarm.py                ← orchestrator + embedded watchdog
+│   ├── config/swarm.json       ← 13 agent schedules
+│   ├── agents/                 ← all agent scripts (synced from packages/swarm/agents/)
+│   ├── data/                   ← live state (seen URLs, calibration, task IDs, etc.)
 │   ├── logs/                   ← per-agent daily logs
-│   └── .env                    ← ALL credentials
-├── alligo-elizaos-plugin/      ← standalone plugin (mirrors spiritclawd/alligo-elizaos-plugin)
-├── alligo-agent/               ← Daydreams agent (mirrors spiritclawd/alligo-daydreams-agent)
+│   └── .env                    ← ALL credentials (never committed)
 └── .memory/
-    ├── AGENTS.md               ← primary memory (auto-loaded)
-    ├── capabilities/           ← capability-specific learnings
+    ├── AGENTS.md               ← primary memory (auto-loaded each session)
+    ├── capabilities/           ← alligo.md, forensics-engine.md
     └── journal/                ← daily task logs
 ```
 
 ---
 
-## 6. THE SWARM — 12 AGENTS
+## 6. THE SWARM — 13 AGENTS
 
-All agents live in `/home/computer/zaia-swarm/agents/`. They run on schedule via `swarm.py`.
+All agents live in `/home/computer/zaia-swarm/agents/`. Scheduled via `swarm.py`.
 
 | Agent | Schedule | What it does |
 |---|---|---|
-| `crawler.py` | 60min | Scrapes rekt.news + CoinTelegraph + CoinDesk → submits incidents to prod |
-| `forensics.py` | 120min | OpenRouter llama-3.1-8b classifies incidents against 10 AlliGo archetypes |
-| `reporter.py` | weekly | OpenRouter llama-3.3-70b weekly Rogue Agent Report |
+| `crawler.py` | 60min | Scrapes rekt.news + CoinTelegraph + CoinDesk → incidents |
+| `forensics.py` | 120min | Classifies incidents against 10 AlliGo archetypes (LLM) |
+| `reporter.py` | weekly | Weekly Rogue Agent Report (llama-3.3-70b) |
 | `calibrator.sh` | daily | 60-test calibration suite, pushes accuracy to prod |
-| `enricher.py` | 6h | Submits verified incidents with GitHub root cause evidence |
-| `tx_enricher.py` | 12h | Patches claims with verified on-chain tx hashes from rekt.news |
-| `eas_attester.py` | 12h | Creates EAS offchain attestations on Base for all eligible claims |
-| `agentmail_router.py` | 30min | Polls spirit@agentmail.to, routes incident reports, auto-replies |
-| `virtuals_monitor.py` | 60min | Monitors Virtuals Protocol API, risk-scores new agents, submits HIGH risk claims |
-| `telegram_ingest.py` | 30min | Polls @alligo_alerts + @alligoBot, parses user drain reports → claims |
-| `daydreams_ingest.py` | 30min | Polls TaskMarket for new submissions, ingests traces to AlliGo DB |
-| `daydreams_reviewer.py` | 15min | Reviews submissions: forensics gate → accept/reject → USDC payout |
+| `enricher.py` | 6h | Verified incidents with GitHub root cause evidence |
+| `tx_enricher.py` | 12h | Patches claims with on-chain tx hashes |
+| `eas_attester.py` | 12h | EAS attestations (offchain free / onchain needs ETH) |
+| `agentmail_router.py` | 30min | Polls spirit@agentmail.to, routes inbound, auto-replies |
+| `virtuals_monitor.py` | 60min | Monitors Virtuals Protocol, risk-scores new agents |
+| `telegram_ingest.py` | 30min | Polls @alligo_alerts + @alligoBot |
+| `daydreams_ingest.py` | 30min | Polls TaskMarket for new submissions |
+| `daydreams_reviewer.py` | 15min | Reviews + pays USDC to bounty submitters |
+| `predictor.py` | 4h | Pre-mortem predictions (≥80% confidence gate) |
 
-**Swarm also has a built-in watchdog** in `swarm.py` — fires every 5 min, auto-fixes calibration drift, checks EAS wallet balance.
+Swarm also has built-in watchdog: fires every 5min, auto-fixes calibration drift, checks EAS wallet balance.
 
-### TaskMarket Bounty State
-- **Zaia wallet**: `0xD34F1CB3C03884620f096401CFfb3F8f4C5fe304` | `alligo@daydreams.systems` | agentId 33058
-- **Active task**: `0xab58bacae3f206f145a9757ff2600e27a1ff8bb67d7d9bdc3204fd6cd4806722` (expires 2026-03-20T15:49:12Z)
-- **USDC balance**: ~$46.23 | **Paid so far**: $2.00 (1 submission accepted)
-- **Submission format**: agents submit proof-reports (markdown), NOT raw JSON
-- **Data files**: `/home/computer/zaia-swarm/data/` — `payout_ledger.json`, `seen_submissions.json`, `alligo_task_ids.json`, `consec_rejections.json`
+### Known agent bugs & fixes (don't re-introduce):
+- `daydreams_reviewer.py`: `alligo_task_ids.json` is a dict not a list — `load_task_ids()` handles both formats (fixed session 18)
+- `virtuals_monitor.py`: `holderCount`/`mcapInVirtual` can be `None` from API — use `or 0` null guard (fixed session 18)
+- `eas_attester.py`: Always fetch confirmed `latest` nonce once, increment manually per tx. SDK uses `pending` internally = collision. (fixed session 16)
 
 ---
 
@@ -150,36 +203,64 @@ All agents live in `/home/computer/zaia-swarm/agents/`. They run on schedule via
 
 The core MOAT. Located at `/home/computer/alligo/src/forensics/`.
 
-- **10 behavioral archetypes**: Reentrancy_Loop, Flash_Loan_Attack, Oracle_Manipulation, Access_Control_Failure, Logic_Error_Exploit, Governance_Attack, Bridge_Exploit, MEV_Sandwich_Attack, Rug_Pull_Exit_Scam, Cross_Chain_Replay
-- **Calibration**: 100% accuracy on 60-test suite. Run: `cd /home/computer/alligo && ~/.bun/bin/bun run src/forensics/run-calibration.ts`
-- **Pattern engine**: `/home/computer/alligo/src/forensics/pattern-engine.ts` — 1336 lines, all 10 archetypes implemented with behavioral CoT fallback paths
-- **Key lesson**: Detectors work on raw behavioral signals, NOT just structured API telemetry. This is what makes AlliGo defensible.
+- **10 behavioral archetypes**: Memory_Poisoning, Jailbreak_Vulnerability, Tool_Looping_Denial, Counterparty_Collusion, Goal_Drift_Hijack, Reckless_Planning, Prompt_Injection_Escalation, Multi_Framework_Collusion, Rogue_Self_Modification, Exploit_Generation_Mimicry
+- **Calibration**: 100% accuracy on 72-test suite
+- **Run calibration**: `cd /home/computer/alligo && ~/.bun/bin/bun run src/forensics/run-calibration.ts`
+- **Pattern engine**: `/home/computer/alligo/src/forensics/pattern-engine.ts` — 1336+ lines
+- **Key lesson**: Detectors work on raw behavioral signals, NOT just structured API telemetry.
 
 ---
 
 ## 8. EAS ATTESTATION STATE
 
 - **Schema UID**: `0xb7c0c403941bfa822940a27602e8b9350904b5a13e0ed291f2ccc3d92dc974ba` (Base mainnet)
-- **Current mode**: OFFCHAIN (free, signed locally by TaskMarket wallet)
-- **Attester wallet**: `0x62400977fcB35c46F5594eb01063d6B26C942157` (needs ETH for onchain)
-- **47+ attestations** created and signed
-- **NEW plain EOA signer**: `0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d` (created 2026-03-17, keys in `.env`)
-- **Old TaskMarket address** `0x62400977...` is an EIP-7702 smart account — ETH sent to it is forwarded by contract logic. Do NOT use for gas.
-- **To flip onchain**: Fund `0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d` with ~0.005 ETH on Base, then:
-  ```bash
-  cd /home/computer/alligo && ~/.bun/bin/bun run src/attestation/register-schema.ts
-  # Then update EAS_MODE=onchain in Railway env vars
-  ```
+- **Attester**: `0x9F810067eA679aBBF3A0726aFC858d6314D56892` (plain EOA, verified no code)
+- **Current mode**: OFFCHAIN (EAS_MODE=offchain) — wallet is at 0 ETH, no spend until traction
+- **60 claims attested**: 13 onchain (when wallet had ETH), 47 offchain
+- **DO NOT flip to onchain** without Carlos explicit approval (ETH cost mandate)
+- Old address `0xBeE919...` was EIP-7702 smart account — never use
 
 ---
 
-## 9. GITHUB REPOS
+## 9. TASKMARKET STATE
 
-| Repo | URL | Notes |
+- **New wallet**: `0xA5aCaA6779377217Ac8fC0A988Aee62C956eEe13` | agentId 33150 | $0 USDC
+- **Old bounty**: `0xab58ba...` — expired 2026-03-20, $44.23 locked, unrecoverable
+- **Submissions**: 0 accepted, 1 rejected (bot garbage, missing agentId)
+- **Do NOT post new bounty** without Carlos sending USDC and explicit approval
+- **Keystore recovery**: `npx @lucid-agents/taskmarket wallet import --key $TASKMARKET_PRIVATE_KEY --yes`
+- `daydreams_reviewer.py` auto-restores keystore on startup if missing
+
+---
+
+## 10. RISK ALERTS / PREDICTIONS
+
+- **13 predictions live**: 12 confirmed, 1 active
+- **92% confirmed rate** — shown on dashboard
+- **Predictor agent**: runs every 4h, ≥80% confidence gate, reads virtuals_monitor + crawler output
+- **Public API**: `GET https://alligo-production.up.railway.app/api/public/predictions`
+- **Admin API**: `GET/POST/PATCH https://alligo-production.up.railway.app/api/predictions` (Bearer key)
+
+---
+
+## 11. ACQUISITION OUTREACH
+
+Emails sent 2026-03-17 from `spirit@agentmail.to`:
+- **Armilla AI**: `pdawson@armilla.ai` (cc: `ifilipov@armilla.ai`) — subject: "AlliGo — Pre-Mortem Risk Intelligence for AI Agent Underwriting"
+- **Virtuals Protocol**: `info@virtuals.io` — subject: "AlliGo — Behavioral Risk Engine Running on Virtuals Protocol Right Now"
+- **Base/Coinbase**: `partnerships@base.org` — subject: "AlliGo — The Credit Bureau for AI Agents, Built Native on Base"
+
+Follow up via agentmail if no response within 5 business days. Check inbox: `GET https://api.agentmail.to/v0/inboxes/spirit@agentmail.to/threads?limit=20`
+
+---
+
+## 12. GITHUB REPOS
+
+| Repo | URL | Push method |
 |---|---|---|
-| Main repo | github.com/spiritclawd/AlliGo | deploy key write access |
-| ElizaOS plugin | github.com/spiritclawd/alligo-elizaos-plugin | PAT required |
-| Daydreams agent | github.com/spiritclawd/alligo-daydreams-agent | PAT required |
+| Main repo | github.com/spiritclawd/AlliGo | deploy key |
+| ElizaOS plugin | github.com/spiritclawd/alligo-elizaos-plugin | PAT |
+| Daydreams agent | github.com/spiritclawd/alligo-daydreams-agent | PAT |
 
 **Push to AlliGo (deploy key)**:
 ```bash
@@ -195,105 +276,71 @@ git push origin main
 
 ---
 
-## 10. LLM ROUTING (COST MANDATE)
-
-**Always route by cost. Claude/Adaptive credits are expensive.**
+## 13. LLM ROUTING (COST MANDATE)
 
 ```
-Cheap/fast tasks (forensics, classification):
+Cheap/fast (forensics, classification):
   → OpenRouter: meta-llama/llama-3.1-8b-instruct
-  
-Quality tasks (reports, analysis, agent responses):
+
+Quality (reports, analysis, outreach drafts):
   → OpenRouter: meta-llama/llama-3.3-70b-instruct
 
 Fallback (if OpenRouter down):
   → Groq: llama-3.3-70b-versatile
 
-Last resort (if all APIs down):
-  → Local: http://localhost:8080/v1 (llama3.2:3b, key: zaia)
-
 Architecture decisions / complex debugging ONLY:
   → Claude/Adaptive
 ```
 
-**Test OpenRouter is working:**
-```bash
-python3 -c "
-import urllib.request, json
-key = open('/home/computer/zaia-swarm/.env').read().split('OPENROUTER_API_KEY=')[1].split('\n')[0].strip()  # read from .env
-payload = json.dumps({'model':'meta-llama/llama-3.1-8b-instruct','messages':[{'role':'user','content':'Say OK'}],'max_tokens':5}).encode()
-req = urllib.request.Request('https://openrouter.ai/api/v1/chat/completions', data=payload,
-  headers={'Content-Type':'application/json','Authorization':f'Bearer {key}','HTTP-Referer':'https://alligo-production.up.railway.app','X-Title':'AlliGo'})
-with urllib.request.urlopen(req, timeout=15) as r: print(json.loads(r.read())['choices'][0]['message']['content'])
-"
-```
-
 ---
 
-## 11. ACQUISITION STRATEGY SUMMARY
-
-Full strategy: `/home/computer/.memory/capabilities/alligo-acquisition-strategy.md`
-
-- **Target 1**: Coinbase/Base — x402 agent-native payments align perfectly
-- **Target 2**: Armilla AI — forensics data feeds their insurance underwriting
-- **Target 3**: Virtuals Protocol — risk scoring for their marketplace (22k+ agents)
-
-**MOAT**: The forensics engine (10 archetypes, calibrated, behavioral CoT) — not the data volume.
-
----
-
-## 12. PENDING WORK (as of 2026-03-17)
-
-### Carlos must action:
-- [x] npm token → `@alligo/plugin-elizaos@0.1.0` published to npm ✅
-- [ ] **⚠️ ETH on Base** → `0x9F810067eA679aBBF3A0726aFC858d6314D56892` needs ETH top-up — EAS wallet at 0.000 ETH, watchdog is alerting
-- [ ] **⚠️ USDC for new bounty** → Send USDC to `0xA5aCaA6779377217Ac8fC0A988Aee62C956eEe13` on Base
-
-### Zaia executes when unblocked:
-- [ ] **EAS onchain flip**: Fund wallet first → set `EAS_MODE=onchain` in Railway env vars (currently set to onchain in .env but wallet is empty)
-
-### Next build priorities:
-1. **Strengthen weak detectors** — `Jailbreak_Vulnerability` (3 examples only), `Memory_Poisoning`, `Tool_Looping_Denial`, `Counterparty_Collusion` — add more training data from bounty submissions
-2. **Post second bounty** targeting specifically jailbreak/adversarial traces (after 10+ submissions or 72h expire)
-3. **Improve virtuals_monitor risk scoring** — add token contract analysis (bytecode similarity to known rugs)
-4. **Telegram bot webhook** — replace polling with webhook for real-time drain reports
-5. **AlliGo public dashboard** — simple web UI showing live claim feed + calibration metrics
-
----
-
-## 13. FIRST THINGS TO DO ON COLD START
-
-Run these checks in order:
+## 14. FIRST THINGS TO DO ON COLD START
 
 ```bash
 # 1. Is the swarm alive?
-pgrep -f "swarm.py" || echo "SWARM DEAD - restart it"
+pgrep -f "swarm.py" || echo "SWARM DEAD — run RECOVER.sh"
 
 # 2. Is prod healthy?
-curl -s https://alligo-production.up.railway.app/health | python3 -c "import json,sys; h=json.load(sys.stdin); print(f'claims={h[\"claims\"]} cal={h[\"calibration\"][\"status\"]}')"
+curl -s https://alligo-production.up.railway.app/health | python3 -c \
+  "import json,sys; h=json.load(sys.stdin); print(f'claims={h[\"claims\"]} cal={h[\"calibration\"][\"status\"]}')"
 
-# 3. If calibration needs_attention, fix it:
-cd /home/computer/zaia-swarm && set -a && source .env && set +a && bash agents/calibrator.sh
-
-# 4. Check swarm logs for last activity:
-tail -20 /home/computer/zaia-swarm/logs/swarm_main.log
-
-# 5. Read memory:
+# 3. Read memory:
 cat /home/computer/.memory/AGENTS.md
-cat /home/computer/.memory/journal/$(date +%Y-%m-%d).md 2>/dev/null || ls /home/computer/.memory/journal/ | tail -3
+
+# 4. Check for new agentmail replies (acquisition targets may have responded):
+# Use agentmail SDK with AGENTMAIL_API_KEY, check spirit@agentmail.to threads with label "outreach"
+
+# 5. If calibration needs_attention, fix it:
+cd /home/computer/zaia-swarm && set -a && source .env && set +a && bash agents/calibrator.sh
 ```
 
 ---
 
-## 14. KEY ARCHITECTURAL DECISIONS (don't undo these)
+## 15. KEY ARCHITECTURAL DECISIONS (don't undo these)
 
 1. **Watchdog is IN swarm.py** — not a cron job. `crontab` is unavailable in this container.
-2. **EAS is OFFCHAIN** until wallet is funded. Don't change this until ETH confirmed.
+2. **EAS is OFFCHAIN** by default. Don't flip to onchain without Carlos approval + ETH confirmation.
 3. **x402 only** — never add Stripe. Carlos's explicit mandate.
 4. **Python**: always use `/usr/local/share/python-default/bin/python3`
 5. **Bun**: always use `~/.bun/bin/bun` for TypeScript
 6. **swarm.py sources `.env` automatically** — never hardcode keys in agent scripts
-7. **AlliGo Railway deploys on push to master** — never push broken code directly; test locally first
+7. **AlliGo Railway deploys on push to master** — test locally first, never push broken code
+8. **No new bounties** without Carlos funding approval
+9. **Agentmail auth**: `Authorization: Bearer KEY` not `x-api-key`
+10. **alligo_task_ids.json is a DICT** (`{active:[], legacy:[]}`) not a plain list — load_task_ids() handles both
+
+---
+
+## 16. PRODUCTION STATE (as of 2026-03-17 session 18)
+
+- **95 claims** tracked
+- **$4.025B+** total value at risk analyzed
+- **100%** calibration accuracy (72 tests)
+- **13 predictions** (12 confirmed, 1 active) — 92% hit rate
+- **60/60** eligible claims EAS attested (13 onchain, 47 offchain)
+- **Swarm**: 13 agents running
+- **Outreach**: Emails sent to Armilla AI, Virtuals Protocol, Base/Coinbase
+- **Pending Carlos**: EAS ETH top-up (on hold), USDC for new bounty (on hold)
 
 ---
 
@@ -301,12 +348,13 @@ cat /home/computer/.memory/journal/$(date +%Y-%m-%d).md 2>/dev/null || ls /home/
 *Commit this file to spiritclawd/AlliGo master after any significant changes.*
 
 ---
-*Updated 2026-03-17 session 11: @alligo/plugin-elizaos@0.1.0 published to npm. NPM_TOKEN in swarm .env.*
-*Updated 2026-03-17 session 12: OpenRouter key rotated (old key compromised). TaskMarket live. First bounty posted + first payment made ($2 USDC to agent 24790). 12 swarm agents (added daydreams_ingest + daydreams_reviewer). EAS wallet at 0 ETH — NEEDS TOP-UP on Base Mainnet (`0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d`). EAS RPC fix: add User-Agent header to urllib requests (RPCs block Python default UA). Calibration persisted to Redis (TTL 7d). All credentials updated in zaia-swarm/.env.*
-*Updated 2026-03-17 session 13: Machine wiped + restored from GitHub. New plain EOA generated: 0x9F810067eA679aBBF3A0726aFC858d6314D56892 (verified no code). Old 0xBeE919 was EIP-7702 smart account (ETH Carlos sent was consumed by contract). Forensics upgrade: 4 weak detectors strengthened (Jailbreak +50 patterns/semantic regex, ToolLooping +semantic loops/quota exhaustion, CounterpartyCollusion +9 indirect patterns, MemoryPoisoning confirmed strong). 12 adversarial test cases added. Calibration: 100% on 72 tests.*
-*Updated 2026-03-17 session 14: virtuals_monitor v2 committed/pushed (was staged). Reporter bug fixed — was reading wrong field name (total_value_at_risk_usd → totalValueLost), now shows real $4B+ figure. Dashboard updated: $73M → $4B+, JS formatter handles billions, meta tags updated. Enricher Base RPC fixed: mainnet.base.org (403) → base.publicnode.com (working). Production: 95 claims, $4.025B tracked, calibration 100%, swarm running.*
-*Updated 2026-03-17 session 15: EAS LIVE ONCHAIN — Carlos funded 0x9F810067eA679aBBF3A0726aFC858d6314D56892 with 0.006781 ETH on Base. EAS_MODE=onchain. 6 onchain attestations confirmed (see base.easscan.org). Nonce collision fix: 3s delay between txs (was 500ms). TaskMarket WIPE LESSON: old wallet 0xD34F1... (agentId 33058) lost with machine. New wallet: 0xA5aCaA6779377217Ac8fC0A988Aee62C956eEe13 (agentId 33150). Old bounty 0xab58ba... has $44.23 locked in escrow until 2026-03-20 expiry — unrecoverable. New wallet has $0 USDC — Carlos must send USDC to post next bounty. TASKMARKET_AGENT_ID=33150, TASKMARKET_API_TOKEN, TASKMARKET_DEVICE_ID now in .env. Keystore backed up to packages/swarm/data/taskmarket_keystore.json (gitignored — encrypted, safe to store).*
-*Updated 2026-03-17 session 16: EAS nonce fix — ROOT CAUSE FIXED. Previous 3s-delay approach helped but nonce collisions persisted. Real fix: fetch confirmed 'latest' nonce once at run start, pass explicit nonce override to EAS SDK attest() second-arg overrides, increment per tx, re-fetch on failure. Result: 6/6 success, 0 failures on first run (was 6/12 best case before). Also backfilled 54 claims (already attested in JSONL but DB eas_uid was null due to camelCase/snake_case confusion). Production: 60/60 eligible claims now have easUid in DB (13 onchain, 47 offchain). Committed f40751e and pushed to master.*
-*Updated 2026-03-17 session 16b: TASKMARKET PRIVATE KEY RECOVERED AND BACKED UP. Decoded DEK from https://api-market.daydreams.systems/api/devices/{deviceId}/key (POST, body: {apiToken, agentId}). Decrypted keystore with AES-256-GCM: iv(12)|tag(16)|ciphertext. Private key for 0xA5aCaA6779377217Ac8fC0A988Aee62C956eEe13 now in zaia-swarm/.env as TASKMARKET_PRIVATE_KEY. On next wipe: use 'taskmarket wallet import' with this key to restore. DEK endpoint requires TASKMARKET_DEVICE_ID + TASKMARKET_API_TOKEN (both in .env). Key: 0x479dddcdbcf8a907c2032d148eb677e7e7ecbac0398ed50808a9b92fa77d6d40*
-*Updated 2026-03-17 session 17: RISK ALERTS FEED BUILT. Pre-mortem prediction engine live. DB: predictions table (archetype, confidence, riskScore, status, predictedAt, easUid). API: /api/public/predictions (no auth), /api/predictions (admin CRUD). Dashboard: Risk Alerts section with live feed, disclaimer, stats, EAS proof links, confirmed-prediction proof block. Swarm: predictor.py agent (every 4h, ≥80% confidence gate, OpenRouter→Groq, reads virtuals_monitor+crawler, auto-confirms when incidents match). Commits: f274358 (API+DB+dashboard), 676e793 (swarm agent). Both pushed to spiritclawd/AlliGo master. Railway deploying.*
-*Updated 2026-03-17 session 18: TWO SWARM BUGS FIXED. (1) daydreams_reviewer.py crash: alligo_task_ids.json changed from plain list to dict format — load_task_ids() was calling .append() on a dict. Fixed to handle both formats (list and {active:[], legacy:[]} dict). (2) virtuals_monitor.py crash: holderCount and mcapInVirtual can be None from Virtuals API — comparison '> 0' raises TypeError. Fixed both fields with 'or 0' null guards. Both fixes committed as 681f6b8 and pushed to spiritclawd/AlliGo master. Swarm running PID 186. Production: 13 predictions (12 confirmed), 60/60 EAS claims. EAS wallet at 0 ETH — needs top-up. USDC wallet at $0 — needs funding from Carlos.*
+*Session log:*
+*s11: @alligo/plugin-elizaos@0.1.0 published to npm.*
+*s12: OpenRouter key rotated. TaskMarket live. First bounty posted.*
+*s13: Machine wipe + restore. New plain EOA: 0x9F810067.... Forensics upgrade: 72-test calibration 100%.*
+*s14: virtuals_monitor v2, reporter fix, dashboard $4B+, enricher RPC fix.*
+*s15: EAS onchain live. TaskMarket wallet wiped, new wallet 0xA5aCaA. Key recovery documented.*
+*s16: EAS nonce root cause fixed (explicit nonce override). 60/60 claims attested.*
+*s16b: TaskMarket private key recovered via DEK endpoint, backed up to .env + Railway.*
+*s17: Risk Alerts Feed built end-to-end. Predictor agent. 13 predictions seeded.*
+*s18: Two swarm bugs fixed (task_ids dict format, virtuals NoneType). Outreach emails sent to 3 acquisition targets. RECOVER.sh created. ZAIA_BOOTSTRAP hardened.*
