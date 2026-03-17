@@ -296,10 +296,11 @@ cat /home/computer/.memory/journal/$(date +%Y-%m-%d).md 2>/dev/null || ls /home/
 
 ---
 
-*Last updated: 2026-03-17 by Zaia (session 13)*
+*Last updated: 2026-03-17 by Zaia (session 14)*
 *Commit this file to spiritclawd/AlliGo master after any significant changes.*
 
 ---
 *Updated 2026-03-17 session 11: @alligo/plugin-elizaos@0.1.0 published to npm. NPM_TOKEN in swarm .env.*
-*Updated 2026-03-17 session 13: Machine wiped + restored from GitHub. New plain EOA generated: 0x9F810067eA679aBBF3A0726aFC858d6314D56892 (verified no code). Old 0xBeE919 was EIP-7702 smart account (ETH Carlos sent was consumed by contract). Forensics upgrade: 4 weak detectors strengthened (Jailbreak +50 patterns/semantic regex, ToolLooping +semantic loops/quota exhaustion, CounterpartyCollusion +9 indirect patterns, MemoryPoisoning confirmed strong). 12 adversarial test cases added. Calibration: 100% on 72 tests.*
 *Updated 2026-03-17 session 12: OpenRouter key rotated (old key compromised). TaskMarket live. First bounty posted + first payment made ($2 USDC to agent 24790). 12 swarm agents (added daydreams_ingest + daydreams_reviewer). EAS wallet at 0 ETH — NEEDS TOP-UP on Base Mainnet (`0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d`). EAS RPC fix: add User-Agent header to urllib requests (RPCs block Python default UA). Calibration persisted to Redis (TTL 7d). All credentials updated in zaia-swarm/.env.*
+*Updated 2026-03-17 session 13: Machine wiped + restored from GitHub. New plain EOA generated: 0x9F810067eA679aBBF3A0726aFC858d6314D56892 (verified no code). Old 0xBeE919 was EIP-7702 smart account (ETH Carlos sent was consumed by contract). Forensics upgrade: 4 weak detectors strengthened (Jailbreak +50 patterns/semantic regex, ToolLooping +semantic loops/quota exhaustion, CounterpartyCollusion +9 indirect patterns, MemoryPoisoning confirmed strong). 12 adversarial test cases added. Calibration: 100% on 72 tests.*
+*Updated 2026-03-17 session 14: virtuals_monitor v2 committed/pushed (was staged). Reporter bug fixed — was reading wrong field name (total_value_at_risk_usd → totalValueLost), now shows real $4B+ figure. Dashboard updated: $73M → $4B+, JS formatter handles billions, meta tags updated. Enricher Base RPC fixed: mainnet.base.org (403) → base.publicnode.com (working). Production: 95 claims, $4.025B tracked, calibration 100%, swarm running.*
