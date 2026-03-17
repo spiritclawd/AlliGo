@@ -799,14 +799,26 @@ async function handleRequest(req: Request): Promise<Response> {
     }
     
     // Get last calibration run timestamp and accuracy
+    // Priority: Redis (survives redeploys) → file → null
     let lastCalibrationRun: number | null = null;
     let calibrationAccuracy: number | null = null;
     try {
-      const calibrationPath = join(process.cwd(), "logs", "calibration-results.json");
-      if (existsSync(calibrationPath)) {
-        const calibrationData = JSON.parse(readFileSync(calibrationPath, "utf-8"));
-        lastCalibrationRun = calibrationData.timestamp;
-        calibrationAccuracy = calibrationData.accuracy;
+      const { isCacheAvailable: calCacheOk, getCached: calGetCached } = await import("../cache/redis");
+      if (calCacheOk()) {
+        const calData = await calGetCached<any>("calibration:latest");
+        if (calData) {
+          lastCalibrationRun = calData.timestamp;
+          calibrationAccuracy = calData.accuracy;
+        }
+      }
+      // Fallback to file
+      if (calibrationAccuracy === null) {
+        const calibrationPath = join(process.cwd(), "logs", "calibration-results.json");
+        if (existsSync(calibrationPath)) {
+          const calibrationData = JSON.parse(readFileSync(calibrationPath, "utf-8"));
+          lastCalibrationRun = calibrationData.timestamp;
+          calibrationAccuracy = calibrationData.accuracy;
+        }
       }
     } catch (e) {
       // Calibration data not available
@@ -869,6 +881,11 @@ async function handleRequest(req: Request): Promise<Response> {
       const { mkdirSync } = await import("fs");
       mkdirSync(join(process.cwd(), "logs"), { recursive: true });
       writeFileSync(calibrationPath, JSON.stringify(result, null, 2));
+      // Also store in Redis so it survives Railway redeploys (TTL: 7 days)
+      try {
+        const { isCacheAvailable: calCacheOk2, setCached: calSetCached2 } = await import("../cache/redis");
+        if (calCacheOk2()) await calSetCached2("calibration:latest", result, 604800);
+      } catch (_) {}
       console.log(`[calibration] Updated: accuracy=${accuracy} tests=${result.total_tests}`);
       return json({ success: true, calibration: result });
     } catch (e) {
