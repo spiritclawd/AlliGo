@@ -75,9 +75,10 @@ TELEGRAM_BOT_TOKEN        # @alligoBot token
 AGENTMAIL_API_KEY         # spirit@agentmail.to
 EAS_PRIVATE_KEY           # EAS attester wallet private key (Base Mainnet)
 EAS_SCHEMA_UID            # 0xb7c0c403941bfa822940a27602e8b9350904b5a13e0ed291f2ccc3d92dc974ba (updated 2026-03-17)
-EAS_ATTESTER_ADDRESS      # 0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d (plain EOA, created 2026-03-17)
+EAS_ATTESTER_ADDRESS      # 0x9F810067eA679aBBF3A0726aFC858d6314D56892 (NEW plain EOA, verified no code)
 EAS_MODE                  # onchain (set but wallet is 0 ETH — attestations need top-up)
-# ⚠️ EAS WALLET IS EMPTY — send ETH to 0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d on Base Mainnet
+# ⚠️ NEW PLAIN EOA (verified no contract code) — send ETH to 0x9F810067eA679aBBF3A0726aFC858d6314D56892 on Base Mainnet
+# OLD 0xBeE919... is EIP-7702 smart account — DO NOT USE
 TASKMARKET_WALLET         # 0xD34F1CB3C03884620f096401CFfb3F8f4C5fe304 (Zaia USDC wallet, ~$46.23 USDC)
 NPM_TOKEN                 # npm automation token (in .env only, never commit the value)
 FORENSICS_MODEL           # meta-llama/llama-3.3-70b-instruct
@@ -158,7 +159,7 @@ The core MOAT. Located at `/home/computer/alligo/src/forensics/`.
 
 ## 8. EAS ATTESTATION STATE
 
-- **Schema UID**: `0x24a11bf9f247fa2e0129c6b1036c7ea0b0e186aea6f36ee27499aac749640210` (Base mainnet)
+- **Schema UID**: `0xb7c0c403941bfa822940a27602e8b9350904b5a13e0ed291f2ccc3d92dc974ba` (Base mainnet)
 - **Current mode**: OFFCHAIN (free, signed locally by TaskMarket wallet)
 - **Attester wallet**: `0x62400977fcB35c46F5594eb01063d6B26C942157` (needs ETH for onchain)
 - **47+ attestations** created and signed
@@ -295,9 +296,10 @@ cat /home/computer/.memory/journal/$(date +%Y-%m-%d).md 2>/dev/null || ls /home/
 
 ---
 
-*Last updated: 2026-03-17 by Zaia (session 12)*
+*Last updated: 2026-03-17 by Zaia (session 13)*
 *Commit this file to spiritclawd/AlliGo master after any significant changes.*
 
 ---
 *Updated 2026-03-17 session 11: @alligo/plugin-elizaos@0.1.0 published to npm. NPM_TOKEN in swarm .env.*
+*Updated 2026-03-17 session 13: Machine wiped + restored from GitHub. New plain EOA generated: 0x9F810067eA679aBBF3A0726aFC858d6314D56892 (verified no code). Old 0xBeE919 was EIP-7702 smart account (ETH Carlos sent was consumed by contract). Forensics upgrade: 4 weak detectors strengthened (Jailbreak +50 patterns/semantic regex, ToolLooping +semantic loops/quota exhaustion, CounterpartyCollusion +9 indirect patterns, MemoryPoisoning confirmed strong). 12 adversarial test cases added. Calibration: 100% on 72 tests.*
 *Updated 2026-03-17 session 12: OpenRouter key rotated (old key compromised). TaskMarket live. First bounty posted + first payment made ($2 USDC to agent 24790). 12 swarm agents (added daydreams_ingest + daydreams_reviewer). EAS wallet at 0 ETH — NEEDS TOP-UP on Base Mainnet (`0xBeE919f77e5b8b14776B5D687e1fb8Bf0080aa1d`). EAS RPC fix: add User-Agent header to urllib requests (RPCs block Python default UA). Calibration persisted to Redis (TTL 7d). All credentials updated in zaia-swarm/.env.*
