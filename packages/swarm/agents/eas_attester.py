@@ -19,8 +19,11 @@ ALLIGO_DIR = Path("/home/computer/alligo")
 BUN = Path.home() / ".bun/bin/bun"
 
 ADMIN_KEY = os.environ.get("ALLIGO_ADMIN_KEY", "")
-EAS_PRIVATE_KEY = "0x0f842410e0109a4f6b6e72b40447acc14089c82de5e0b0f6a3c7bee9d05f2a11"
-EAS_SCHEMA_UID = "0x24a11bf9f247fa2e0129c6b1036c7ea0b0e186aea6f36ee27499aac749640210"
+# New plain EOA signer — old TaskMarket address was EIP-7702 smart account, can't pay gas
+EAS_PRIVATE_KEY = os.environ.get("EAS_PRIVATE_KEY", "0x7ad85048c9e3d16c467fd294a1d5b2fb9662a31a307084cd29b7354dce2fd8ee")
+# New onchain schema UID registered 2026-03-17 on Base mainnet
+EAS_SCHEMA_UID = os.environ.get("EAS_SCHEMA_UID", "0xb7c0c403941bfa822940a27602e8b9350904b5a13e0ed291f2ccc3d92dc974ba")
+EAS_MODE = os.environ.get("EAS_MODE", "onchain")
 
 def log(msg: str):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -44,9 +47,10 @@ def run():
         "ALLIGO_ADMIN_KEY": ADMIN_KEY,
         "EAS_PRIVATE_KEY": EAS_PRIVATE_KEY,
         "EAS_SCHEMA_UID": EAS_SCHEMA_UID,
-        "EAS_MODE": "offchain",
+        "EAS_MODE": EAS_MODE,
         "ALLIGO_API": "https://alligo-production.up.railway.app",
     })
+    log(f"Mode: {EAS_MODE} | Schema: {EAS_SCHEMA_UID[:20]}...")
 
     result = subprocess.run(
         [str(BUN), "run", "src/attestation/attest-claims.ts"],
