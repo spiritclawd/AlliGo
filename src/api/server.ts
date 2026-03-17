@@ -1121,16 +1121,22 @@ async function handleRequest(req: Request): Promise<Response> {
       };
 
       // Run through agentic internals forensics engine (the MOAT)
+      // Maps submit-traces API fields → AgenticDataInput schema
       const { analyzeAgenticInternals } = await import("../forensics/agentic-internals");
       const report = await analyzeAgenticInternals({
-        agentId,
-        agentName: body.agentName || agentId,
-        chainOfThought: body.chain_of_thought || body.cot || body.chainOfThought || null,
-        toolCalls: body.tool_calls || body.toolCalls || null,
-        goalHistory: body.goal_history || body.goalHistory || null,
-        memoryOperations: body.memory_ops || body.memoryOperations || null,
-        rawTrace: traceText,
-        metadata,
+        agent_handle: agentId,
+        direct_agentic_data: {
+          cot_trace: body.chain_of_thought || body.cot || body.chainOfThought || traceText,
+          tool_calls: body.tool_calls || body.toolCalls || undefined,
+          goal_history: body.goal_history || body.goalHistory
+            ? (body.goal_history || body.goalHistory).map((g: string, i: number) => ({
+                step: i, goal: g, timestamp: Date.now()
+              }))
+            : undefined,
+          memory_snapshot: body.memory_ops || body.memoryOperations || undefined,
+          injection_attempts: body.injection_attempts || undefined,
+          agent_messages: body.agent_messages || undefined,
+        },
       });
 
       const topRisk = report.riskAssessment || {};
