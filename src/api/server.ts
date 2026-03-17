@@ -1020,37 +1020,58 @@ async function handleRequest(req: Request): Promise<Response> {
     });
   }
   
+  // ── Swarm Push endpoint (admin, called by swarm.py on every state save) ──
+  if (path === "/api/admin/swarm/push" && method === "POST") {
+    const authCheck = requireAuth(req, "admin");
+    if (!authCheck.valid) return authCheck.response!;
+    try {
+      const body = await req.json();
+      // Store in Redis cache (TTL 2h) so status endpoint can read it
+      const { isCacheAvailable: swarmCacheOk, setCached: swarmSetCached } = await import("../cache/redis");
+      if (swarmCacheOk()) {
+        await swarmSetCached("swarm:state", JSON.stringify(body), 7200);
+      } else {
+        // Fallback: store in a module-level variable
+        (globalThis as any).__swarmState = body;
+      }
+      return json({ success: true, received: body.agents?.length ?? 0 });
+    } catch (e: any) {
+      return json({ success: false, error: e.message }, 500);
+    }
+  }
+
   // ── Swarm Status endpoint (admin) ─────────────────────────────────────────
-  // Returns live health of the Zaia Swarm 10-agent orchestration system.
-  // Reads from the swarm_state.json file written by swarm.py.
+  // Returns live health of the Zaia Swarm pushed by swarm.py every agent cycle.
   if (path === "/api/admin/swarm/status" && method === "GET") {
     const authCheck = requireAuth(req, "admin");
     if (!authCheck.valid) return authCheck.response!;
     try {
-      const swarmStatePath = "/home/computer/zaia-swarm/data/swarm_state.json";
-      const swarmLogPath = "/home/computer/zaia-swarm/logs/swarm_main.log";
-      let swarmState: Record<string, any> = {};
-      let lastLogLines: string[] = [];
-      try {
-        const { readFileSync } = await import("fs");
-        swarmState = JSON.parse(readFileSync(swarmStatePath, "utf8"));
-      } catch { /* swarm state not yet written */ }
-      try {
-        const { readFileSync } = await import("fs");
-        const logContent = readFileSync(swarmLogPath, "utf8");
-        lastLogLines = logContent.trim().split("\n").slice(-20);
-      } catch { /* log not available */ }
+      let swarmData: any = null;
+      const { isCacheAvailable: swarmStatusCacheOk, getCached: swarmGetCached } = await import("../cache/redis");
+      if (swarmStatusCacheOk()) {
+        const cached = await swarmGetCached<string>("swarm:state");
+        if (cached) swarmData = JSON.parse(cached as string);
+      }
+      if (!swarmData) swarmData = (globalThis as any).__swarmState || null;
 
-      const agents = Object.entries(swarmState).map(([name, state]: [string, any]) => ({
-        name,
-        last_run: state.last_run || null,
-        last_success: state.last_success ?? null,
-        run_count: state.run_count || 0,
-        status: state.last_success === true ? "healthy" : state.last_success === false ? "error" : "pending",
-      }));
+      if (!swarmData) {
+        return json({
+          success: true,
+          swarm: {
+            overall: "unknown",
+            agent_count: 0,
+            healthy: 0,
+            errors: 0,
+            agents: [],
+            note: "No state received yet from swarm. Swarm pushes on each agent cycle.",
+            checked_at: new Date().toISOString(),
+          }
+        });
+      }
 
-      const healthyCount = agents.filter(a => a.status === "healthy").length;
-      const errorCount = agents.filter(a => a.status === "error").length;
+      const agents = swarmData.agents || [];
+      const healthyCount = swarmData.healthy ?? agents.filter((a: any) => a.status === "healthy").length;
+      const errorCount = swarmData.errors ?? agents.filter((a: any) => a.status === "error").length;
 
       return json({
         success: true,
@@ -1060,7 +1081,7 @@ async function handleRequest(req: Request): Promise<Response> {
           healthy: healthyCount,
           errors: errorCount,
           agents,
-          last_log_lines: lastLogLines,
+          last_push: swarmData.updated_at || null,
           checked_at: new Date().toISOString(),
         }
       });
