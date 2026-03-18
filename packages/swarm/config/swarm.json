@@ -93,6 +93,12 @@
       "schedule_hours": 24,
       "script": "agents/revenue_reporter.py",
       "description": "Posts daily revenue report to Telegram: USDC unlocks, pro key count, prediction accuracy"
+    },
+    "daydreams_monitor": {
+      "enabled": true,
+      "schedule_hours": 6,
+      "script": "agents/daydreams_monitor.py",
+      "description": "Scores Daydreams Commerce Harness agents through AlliGo forensics — live Reputation Registry for ERC-8004"
     }
   },
   "sources": {

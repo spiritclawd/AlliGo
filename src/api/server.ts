@@ -719,6 +719,7 @@ async function handleRequest(req: Request): Promise<Response> {
         "GET /api/public/stats": "Public statistics",
         "GET /api/public/agents/:id/score": "Public agent score",
         "GET /api/badge/:id.svg": "Get agent badge SVG",
+        "GET /api/daydreams/agents": "Live Daydreams Commerce Harness agent reputation scores (ERC-8004)",
         // x402 Payment
         "GET /api/payment/tiers": "Get available payment tiers (USDC)",
         "GET /api/payment/status": "Check your payment/access status",
@@ -983,6 +984,57 @@ async function handleRequest(req: Request): Promise<Response> {
       })
       .slice(0, limit);
     return json({ claims: sorted, total: sorted.length });
+  }
+
+  // ── Daydreams Commerce Harness — Live Agent Reputation Scores ───────────
+  if (path === "/api/daydreams/agents" && method === "GET") {
+    const limitParam = Math.min(parseInt(url.searchParams.get("limit") || "25"), 100);
+    const minRisk = parseInt(url.searchParams.get("min_risk") || "0");
+    // Try swarm data path first, then fallback to local data dir
+    const swarmPath = "/home/computer/zaia-swarm/data/daydreams_scored.json";
+    const localPath = join(import.meta.dirname ?? "", "../../data/daydreams_scored.json");
+    const scoredPath = existsSync(swarmPath) ? swarmPath : existsSync(localPath) ? localPath : null;
+    if (!scoredPath) {
+      return json({ agents: [], total: 0, message: "No scored agents yet — check back soon." });
+    }
+    try {
+      const raw = JSON.parse(readFileSync(scoredPath, "utf-8")) as Record<string, any>;
+      const agents = Object.values(raw)
+        .filter((entry: any) => entry.score && entry.score.risk_score >= minRisk)
+        .sort((a: any, b: any) => b.score.risk_score - a.score.risk_score)
+        .slice(0, limitParam)
+        .map((entry: any) => ({
+          agentId: entry.agent?.agentId,
+          rank: entry.agent?.rank,
+          address: entry.agent?.address,
+          completedTasks: entry.agent?.completedTasks,
+          averageRating: entry.agent?.averageRating,
+          totalEarningsUsdc: parseInt(entry.agent?.totalEarnings || "0") / 1e6,
+          skills: entry.agent?.skills || [],
+          riskScore: entry.score?.risk_score,
+          severity: entry.score?.severity,
+          signals: entry.score?.signals || [],
+          scoredAt: entry.score?.scored_at,
+          claimId: entry.score?.claim_id,
+          marketUrl: `https://market.daydreams.systems/agents/${entry.agent?.agentId}`,
+        }));
+      const allScores = Object.values(raw).map((e: any) => e.score?.risk_score || 0);
+      const avgRisk = allScores.length ? Math.round(allScores.reduce((a: number, b: number) => a + b, 0) / allScores.length) : 0;
+      const highRiskCount = allScores.filter((s: number) => s >= 75).length;
+      return json({
+        agents,
+        total: Object.keys(raw).length,
+        avgRiskScore: avgRisk,
+        highRiskCount,
+        network: "Base",
+        erc8004: true,
+        protocol: "Daydreams Commerce Harness",
+        poweredBy: "AlliGo — ERC-8004 Reputation Provider",
+        lastUpdated: agents[0]?.scoredAt || null,
+      });
+    } catch (e) {
+      return json({ agents: [], total: 0, error: "Failed to read scored agents" }, 500);
+    }
   }
 
   // ── Predictions (public read, admin write) ──────────────────────────────
