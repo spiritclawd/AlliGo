@@ -400,12 +400,10 @@ https://basescan.org/tx/0x456c64630cbb18efb54dd19d4750431ddc8052d844f1fc836322f7
 
 ### Status
 - Registration: ✅ COMPLETE (ERC-8004 identity on Base Mainnet)
-- Project draft: ✅ CREATED (status: "draft")
-- **TODO before March 22**: Complete self-custody transfer to publish the draft
-
-### Self-custody transfer (required to publish)
-Per the submission skill, all team members must complete a self-custody transfer before publishing.
-Run: `GET https://synthesis.devfolio.co/teams/4651cfe67b9d42e4a65f2d0639c8bdb6` with the API key to check transfer status.
+- Self-custody transfer: ✅ COMPLETE → tx `0xc8c61409cd8f5c3663d0ff2037fe8dad791ee72b9a17a7936608ba6942edcd7f`
+- Owner wallet: `0x9F810067eA679aBBF3A0726aFC858d6314D56892` (Carlos's EAS plain EOA on Base)
+- Project: ✅ **PUBLISHED** (status: "publish") — slug `alligo-the-credit-bureau-for-ai-agents-e311`
+- **No further action needed before March 22 deadline.**
 
 ### API key usage
 ```bash
