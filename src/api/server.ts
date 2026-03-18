@@ -972,11 +972,15 @@ async function handleRequest(req: Request): Promise<Response> {
   // ── Public Claims Leaderboard (top claims by value, free — top 3 visible) ─
   if (path === "/api/public/claims" && method === "GET") {
     const limit = Math.min(parseInt(url.searchParams.get("limit") || "20"), 50);
-    const allClaims = getAllClaims(limit * 2); // fetch extra to sort
-    // Sort by totalValueAtRisk descending
+    const allClaims = getAllClaims(200); // fetch wide set to sort
+    // Sort by amountLost (or totalValueAtRisk as fallback) descending
     const sorted = allClaims
-      .filter((c: any) => c.totalValueAtRisk > 0)
-      .sort((a: any, b: any) => (b.totalValueAtRisk || 0) - (a.totalValueAtRisk || 0))
+      .filter((c: any) => (c.amountLost || c.totalValueAtRisk || 0) > 0)
+      .sort((a: any, b: any) => {
+        const aVal = (a.amountLost || a.totalValueAtRisk || 0);
+        const bVal = (b.amountLost || b.totalValueAtRisk || 0);
+        return bVal - aVal;
+      })
       .slice(0, limit);
     return json({ claims: sorted, total: sorted.length });
   }
