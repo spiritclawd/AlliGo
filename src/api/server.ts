@@ -1196,13 +1196,10 @@ async function handleRequest(req: Request): Promise<Response> {
   // Ingests raw agentic behavioral traces (CoT, tool calls, goal traces, memory ops).
   // Runs through the forensics engine and returns classification + confidence.
   // Stores high-confidence detections as claims. Attests via EAS if verified.
-  // Auth: API key (read tier or above) or x402 single payment.
+  // Auth: open to all — API key bypasses rate limit, unauthenticated allowed for bounty agents.
+  // x402 gate removed from this endpoint: we are paying agents to submit, not the other way around.
   if (path === "/api/submit-traces" && method === "POST") {
-    const authCheck = requireAuth(req, "read");
-    if (!authCheck.valid) {
-      const x402Check = await x402Middleware(req, "/api/submit-traces", "single_report");
-      if (!x402Check.allowed) return x402Check.response!;
-    }
+    // No auth required — free submission endpoint for bounty agents and public use.
     try {
       const body = await req.json();
 
