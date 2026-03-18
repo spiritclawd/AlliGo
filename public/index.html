@@ -2273,12 +2273,12 @@ if (score.grade === 'F' || score.grade === 'D') {
         })) {
           // Key 1: same amountLost + first 40 chars of title
           const titleKey = `${c.amountLost||0}::${(c.title||'').toLowerCase().slice(0,40)}`;
-          // Key 2: for discovered agents, same amountLost alone (e.g. Step Finance $27.3M from two sources)
-          const amtKey = (c.agentId||'').startsWith('discovered_') ? `amt::${c.amountLost||0}` : null;
-          const alreadySeen = amtTitleSeen.has(titleKey) || (amtKey && amtTitleSeen.has(amtKey));
+          // Key 2: same amountLost (catches same incident with different agentId + different title, e.g. discovered vs named)
+          const amtKey = `amt::${c.amountLost||0}`;
+          const alreadySeen = amtTitleSeen.has(titleKey) || amtTitleSeen.has(amtKey);
           if (!alreadySeen) {
             amtTitleSeen.set(titleKey, true);
-            if (amtKey) amtTitleSeen.set(amtKey, true);
+            amtTitleSeen.set(amtKey, true);
             deduped.push(c);
           }
         }
