@@ -6,6 +6,7 @@
 import { config } from "../config";
 import { getSessionByToken, getUserById, getApiKeyByKey } from "./db";
 import { User, SafeUser, toSafeUser, UserApiKey } from "./user";
+import { db } from "../api/db";
 
 // ==================== TYPES ====================
 
@@ -34,45 +35,62 @@ export interface RateLimitConfig {
 
 // ==================== RATE LIMITING ====================
 
-// In-memory rate limit store
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+// SQLite-backed rate limit store — survives restarts
+db.run(`
+  CREATE TABLE IF NOT EXISTS rate_limits (
+    client_id TEXT NOT NULL,
+    window_key TEXT NOT NULL,
+    count INTEGER NOT NULL DEFAULT 1,
+    reset_at INTEGER NOT NULL,
+    PRIMARY KEY (client_id, window_key)
+  )
+`);
+db.run(`CREATE INDEX IF NOT EXISTS idx_rate_limits_reset ON rate_limits(reset_at)`);
 
 /**
- * Check rate limit for a client
+ * Check rate limit for a client (SQLite-backed, restart-safe)
  */
 export function checkRateLimit(
   clientId: string,
   config: RateLimitConfig
 ): { allowed: boolean; remaining: number; resetIn: number } {
   const now = Date.now();
-  const record = rateLimitStore.get(clientId);
-  
-  if (!record || record.resetAt < now) {
-    // Create new window
-    rateLimitStore.set(clientId, {
-      count: 1,
-      resetAt: now + config.windowMs,
-    });
+  // Window key bucketed by windowMs so each window period is distinct
+  const windowStart = Math.floor(now / config.windowMs) * config.windowMs;
+  const resetAt = windowStart + config.windowMs;
+  const windowKey = String(windowStart);
+
+  const existing = db.prepare(
+    "SELECT count, reset_at FROM rate_limits WHERE client_id = ? AND window_key = ?"
+  ).get(clientId, windowKey) as { count: number; reset_at: number } | null;
+
+  if (!existing) {
+    db.prepare(
+      "INSERT OR REPLACE INTO rate_limits (client_id, window_key, count, reset_at) VALUES (?, ?, 1, ?)"
+    ).run(clientId, windowKey, resetAt);
     return {
       allowed: true,
       remaining: config.maxRequests - 1,
-      resetIn: config.windowMs,
+      resetIn: resetAt - now,
     };
   }
-  
-  if (record.count >= config.maxRequests) {
+
+  if (existing.count >= config.maxRequests) {
     return {
       allowed: false,
       remaining: 0,
-      resetIn: record.resetAt - now,
+      resetIn: existing.reset_at - now,
     };
   }
-  
-  record.count++;
+
+  db.prepare(
+    "UPDATE rate_limits SET count = count + 1 WHERE client_id = ? AND window_key = ?"
+  ).run(clientId, windowKey);
+
   return {
     allowed: true,
-    remaining: config.maxRequests - record.count,
-    resetIn: record.resetAt - now,
+    remaining: config.maxRequests - (existing.count + 1),
+    resetIn: existing.reset_at - now,
   };
 }
 
@@ -80,12 +98,7 @@ export function checkRateLimit(
  * Clean up expired rate limit entries
  */
 export function cleanupRateLimits(): void {
-  const now = Date.now();
-  for (const [key, record] of rateLimitStore.entries()) {
-    if (record.resetAt < now) {
-      rateLimitStore.delete(key);
-    }
-  }
+  db.prepare("DELETE FROM rate_limits WHERE reset_at < ?").run(Date.now());
 }
 
 // Run cleanup every 5 minutes
