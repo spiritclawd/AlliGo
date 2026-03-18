@@ -87,6 +87,12 @@
       "schedule_hours": 4,
       "script": "agents/predictor.py",
       "description": "Pre-mortem risk prediction engine: flags high-risk agents at \u226580% confidence, publishes EAS-attested risk alerts before incidents happen"
+    },
+    "revenue_reporter": {
+      "enabled": true,
+      "schedule_hours": 24,
+      "script": "agents/revenue_reporter.py",
+      "description": "Posts daily revenue report to Telegram: USDC unlocks, pro key count, prediction accuracy"
     }
   },
   "sources": {

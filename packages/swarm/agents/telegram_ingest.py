@@ -114,22 +114,143 @@ def fetch_bot_updates(bot_token: str, offset: int = 0) -> list:
     return data.get("result", [])
 
 
-def fetch_channel_messages_bot(bot_token: str, channel: str, limit: int = 50) -> list:
+def send_bot_message(bot_token: str, chat_id: int | str, text: str, parse_mode: str = "Markdown") -> bool:
+    """Send a reply message via Telegram Bot API."""
+    url = f"{TELEGRAM_API}/bot{bot_token}/sendMessage"
+    payload = {"chat_id": chat_id, "text": text, "parse_mode": parse_mode}
+    result = http_post(url, payload)
+    return bool(result and result.get("ok"))
+
+
+def handle_report_command(bot_token: str, chat_id: int | str, text: str, admin_key: str):
+    """
+    Handle /report <agent_id_or_name> command.
+    Runs forensics via AlliGo API, replies with score + payment CTA.
+    """
+    # Parse agent identifier from command: /report <identifier>
+    parts = text.strip().split(None, 1)
+    agent_query = parts[1].strip() if len(parts) > 1 else ""
+    agent_query = agent_query.lstrip("@").strip()
+
+    if not agent_query:
+        send_bot_message(bot_token, chat_id,
+            "⚠️ Usage: `/report <agent_id_or_name>`\n\nExample: `/report my-trading-bot`")
+        return
+
+    log(f"🔍 /report command: agent_query='{agent_query}' chat_id={chat_id}")
+
+    # Acknowledge immediately
+    send_bot_message(bot_token, chat_id,
+        f"🔍 Running forensics on `{agent_query}`...\nThis takes a moment.")
+
+    # Try to fetch score from AlliGo
+    encoded = urllib.parse.quote(agent_query)
+    score_data = None
+
+    # Try public score endpoint first (by agentId)
+    score_data = http_get(f"{ALLIGO_API}/api/public/agents/{encoded}/score")
+    if not score_data or score_data.get("error"):
+        # Try searching claims for agent name
+        claims_data = http_get(f"{ALLIGO_API}/api/public/claims?limit=50")
+        if claims_data and claims_data.get("claims"):
+            matches = [c for c in claims_data["claims"]
+                       if agent_query.lower() in (c.get("agentName") or "").lower()
+                       or agent_query.lower() in (c.get("agentId") or "").lower()]
+            if matches:
+                best = matches[0]
+                score_data = {
+                    "agentId": best.get("agentId"),
+                    "agentName": best.get("agentName"),
+                    "score": best.get("riskScore"),
+                    "severity": best.get("severity"),
+                    "totalValueAtRisk": best.get("totalValueAtRisk"),
+                    "incidentType": best.get("incidentType"),
+                    "description": best.get("description"),
+                }
+
+    USDC_ADDRESS = "0x1dcD106e0807E80d538E5F1A8b3B9980A055A7a5"
+
+    if not score_data or (score_data.get("error") and not score_data.get("agentId")):
+        # No data found — still offer custom report for payment
+        reply = (
+            f"🤖 *AlliGo Forensics — `{agent_query}`*\n\n"
+            f"No existing record found for this agent.\n\n"
+            f"📋 *Custom forensics report: $25 USDC*\n"
+            f"Send *25 USDC* on Base to:\n`{USDC_ADDRESS}`\n\n"
+            f"Include `REPORT:{agent_query}` in memo or email `spirit@agentmail.to` with tx hash. "
+            f"Full behavioral analysis delivered within 24h."
+        )
+        send_bot_message(bot_token, chat_id, reply)
+        log(f"   ⚠️ No record found for '{agent_query}', sent payment CTA")
+        return
+
+    # Format found data
+    agent_name = score_data.get("agentName") or score_data.get("agentId") or agent_query
+    risk_score = score_data.get("score") or score_data.get("riskScore") or "N/A"
+    severity = score_data.get("severity") or "UNKNOWN"
+    value_at_risk = score_data.get("totalValueAtRisk") or 0
+    incident_type = score_data.get("incidentType") or "Unknown"
+    description = (score_data.get("description") or "No description available.")[:200]
+
+    # Severity emoji
+    sev_emoji = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢"}.get(severity, "⚪")
+
+    # Format value
+    if value_at_risk >= 1_000_000:
+        val_str = f"${value_at_risk/1_000_000:.1f}M"
+    elif value_at_risk >= 1_000:
+        val_str = f"${value_at_risk/1_000:.0f}K"
+    elif value_at_risk > 0:
+        val_str = f"${value_at_risk:,}"
+    else:
+        val_str = "Unknown"
+
+    reply = (
+        f"🤖 *AlliGo Forensics Report*\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"*Agent:* `{agent_name}`\n"
+        f"*Risk Score:* {risk_score}/100\n"
+        f"*Severity:* {sev_emoji} {severity}\n"
+        f"*Incident Type:* {incident_type}\n"
+        f"*Value at Risk:* {val_str}\n\n"
+        f"📝 _{description}_\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"🔒 *Full internals* (confidence breakdown, EAS proof, raw signals): *$10 USDC*\n"
+        f"Send to: `{USDC_ADDRESS}` on Base\n"
+        f"Reply with tx hash or email `spirit@agentmail.to` — delivered in minutes.\n\n"
+        f"_Powered by AlliGo — The Credit Bureau for AI Agents_"
+    )
+    send_bot_message(bot_token, chat_id, reply)
+    log(f"   ✅ Report sent for '{agent_name}' severity={severity} val={val_str}")
+
+
+def fetch_channel_messages_bot(bot_token: str, channel: str, limit: int = 50, admin_key: str = "") -> list:
     """
     Forward channel messages via bot. Bot must be admin of the channel.
     Uses getChatHistory workaround via forwardMessages if needed.
     Falls back to getUpdates for direct messages to the bot.
+    Also handles /report commands from direct messages.
     """
     updates = fetch_bot_updates(bot_token, offset=0)
     messages = []
     for update in updates:
         msg = update.get("message") or update.get("channel_post") or {}
         if msg:
+            text = msg.get("text", "")
+            chat_id = msg.get("chat", {}).get("id")
+            chat_type = msg.get("chat", {}).get("type", "unknown")
+
+            # Handle /report command (from DMs or groups)
+            if text.strip().startswith("/report") and chat_id:
+                handle_report_command(bot_token, chat_id, text, admin_key)
+                # Don't add to messages list — already handled
+                continue
+
             messages.append({
                 "id": update.get("update_id"),
-                "text": msg.get("text", ""),
+                "text": text,
                 "from": msg.get("from", {}).get("username", "unknown"),
-                "chat_type": msg.get("chat", {}).get("type", "unknown"),
+                "chat_type": chat_type,
                 "chat_title": msg.get("chat", {}).get("title", ""),
                 "date": msg.get("date", 0),
             })
@@ -298,7 +419,7 @@ def main():
     messages = []
     if bot_token:
         log("🤖 Using Bot API mode")
-        messages = fetch_channel_messages_bot(bot_token, TELEGRAM_CHANNEL)
+        messages = fetch_channel_messages_bot(bot_token, TELEGRAM_CHANNEL, admin_key=admin_key)
         log(f"📨 Bot API returned {len(messages)} updates")
     
     # Always also scrape public channel (catches channel posts bot might miss)
