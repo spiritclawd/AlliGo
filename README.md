@@ -1,10 +1,10 @@
 # AlliGo
 
-**The Autonomous Risk Observatory for Agentic Finance**
+**The Incident Intelligence Layer for the Agentic Economy**
 
-> *"We See What Agents Think Before They Act"*
+> *"The data layer the rest of the agent industry runs on."*
 
-AlliGo is a live forensics engine, prediction system, and ERC-8004 reputation registry for AI agents — built on Base, attested via EAS, monetized via x402. It's not a database. It's a 15-agent autonomous operation that never sleeps.
+AlliGo is the ground truth record of what AI agents have actually done — which ones failed, how, why, and with what behavioral pattern. Every agent wallet firewall, insurance protocol, and reputation system needs this data. Nobody else is building it. AlliGo does, autonomously, 24/7.
 
 🔴 **Live:** [alligo-production.up.railway.app](https://alligo-production.up.railway.app)
 
@@ -37,20 +37,24 @@ AlliGo is a live forensics engine, prediction system, and ERC-8004 reputation re
 
 ---
 
-## Why It Matters
+## Why AlliGo Is Upstream
 
-When your agent interacts with another agent or service, there's no neutral way to verify its behavioral track record without trusting a centralized registry. That registry can go down, revoke access, or rewrite history. Meanwhile:
+The agentic economy is building fast. Wallet guardrails, insurance protocols, agent launchpads — they're all going live right now. But they're all flying blind. They have no historical incident data, no behavioral classification, no prediction layer. They can't price risk or block threats intelligently without a ground truth record of past failures.
 
-- Bybit lost **$1.5B** via AI-assisted social engineering on a multisig signing agent
-- Aave lost **$50M** via oracle price manipulation exploiting a lending protocol agent
-- Step Finance lost **$27.3M** via executive email compromise of an admin key agent
+**AlliGo is that ground truth record.** And it's already live.
 
-None of these events are permanently, agent-readably recorded anywhere. **AlliGo fixes this.**
+- **Mandate-style guardrails** need incident history to build threat models → AlliGo provides it
+- **Armilla-style insurance** needs loss data to price policies → AlliGo's $4B+ dataset
+- **Virtuals-style launchpads** need behavioral vetting → AlliGo's 10-archetype scoring
+- **Base ecosystem** needs onchain agent accountability → AlliGo's EAS attestations
 
-The trust primitive the agentic economy is missing:
+AlliGo is not competing with any of these. It is upstream of all of them.
+
+What the agentic economy was missing:
 - **Onchain and permanent** — EAS on Base, not inside a platform's internal logs
 - **Agent-callable** — any agent can query via x402, no human in the loop
-- **Forensically grounded** — behavioral evidence, not vibes-based scores
+- **Forensically grounded** — behavioral evidence across 10 archetypes, not vibes-based scores
+- **Predictive** — 13 pre-mortem alerts, 92% hit rate — not just a historical ledger
 - **ERC-8004 compatible** — the emerging standard for trustless agent identity
 
 ---
@@ -139,15 +143,16 @@ alligo/
 
 ## Competitor Landscape
 
-| Company | What They Do | Relationship |
-|---------|-------------|--------------|
-| **Armilla AI** | Insurance underwriting for AI agents | Potential acquirer — needs our $4B+ incident dataset to price policies |
-| **Daydreams** | Agent identity + TaskMarket for agent commerce | Integration partner — we score their agents in real-time |
-| **Virtuals Protocol** | Agent launchpad on Base (~500 agents) | Outreach target — needs ERC-8004 reputation layer for their ecosystem |
+| Company | What They Do | Relationship to AlliGo |
+|---------|-------------|----------------------|
+| **Mandate** | Per-wallet intent-aware transaction guardrails | Downstream — their threat model needs our incident data to be intelligent |
+| **Armilla AI** | Insurance underwriting for AI agents | Downstream — needs our $4B+ loss dataset to price policies accurately |
+| **Daydreams** | Agent identity + TaskMarket for agent commerce | Integration partner — we score their 100+ agents in real-time |
+| **Virtuals Protocol** | Agent launchpad on Base (~500 agents) | Downstream — needs ERC-8004 reputation layer for ecosystem vetting |
 | **Coinbase / Base** | L2 chain + agent infrastructure | Aligned acquirer — AlliGo is the reference ERC-8004 impl on their chain |
-| **EF dAI** | Ethereum Foundation AI (ERC-8004 co-authors) | Outreach target — we're their reference implementation |
+| **EF dAI** | Ethereum Foundation AI (ERC-8004 co-authors) | Upstream ally — we're their reference implementation |
 
-**No direct competitor exists.** There is no live "credit bureau for AI agents" anywhere. AlliGo is first.
+**No direct competitor exists.** There is no live incident intelligence layer for AI agents anywhere. AlliGo is first — and every prevention/insurance/vetting tool being built right now needs what we have.
 
 ---
 
@@ -211,5 +216,5 @@ DATABASE_PATH          # SQLite path (default: ./data/alligo.db)
 
 ---
 
-*Built autonomously by Zaia + Carlos de la Figuera. 21 sessions. 111 commits. 3 weeks.*  
+*Built autonomously by Zaia + Carlos de la Figuera. 22 sessions. 111+ commits. 3 weeks.*  
 *[alligo-production.up.railway.app](https://alligo-production.up.railway.app)*
